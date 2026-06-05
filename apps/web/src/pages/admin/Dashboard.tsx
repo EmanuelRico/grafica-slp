@@ -62,6 +62,7 @@ export default function AdminDashboard() {
   const [countdown, setCountdown] = useState(120);
   const [justRefreshed, setJustRefreshed] = useState(false);
 
+  useEffect(() => { document.title = 'Admin - GRAFICA SLP'; }, []);
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
   useEffect(() => { api.admin.storageStats().then(setStorage).catch(() => {}); }, []);
 

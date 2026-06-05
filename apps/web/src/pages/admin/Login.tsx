@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Printer, Lock } from 'lucide-react';
@@ -13,6 +13,8 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => { document.title = 'Admin - GRAFICA SLP'; }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -84,6 +84,7 @@ export default function AdminOrderDetail() {
   const [newStatus, setNewStatus] = useState('');
   const [note, setNote] = useState('');
 
+  useEffect(() => { document.title = 'Admin - GRAFICA SLP'; }, []);
   useEffect(() => {
     if (!id) return;
     api.admin.getOrder(id)

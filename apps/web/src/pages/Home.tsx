@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { FilePlus, MagnifyingGlass, Question, ArrowRight, InstagramLogo, FacebookLogo, WhatsappLogo } from '@phosphor-icons/react';
