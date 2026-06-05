@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --blue:        #01AEF0;
+  --blue-mid:    #0098D4;
+  --blue-deep:   #0073A8;
+  --blue-light:  #5EC1F4;
+  --blue-pale:   #E8F7FD;
+  --yellow:      #F5C518;
+  --yellow-pale: #FFFAE6;
+  --slate:       #48708C;
+  --ink:         #0D1B2A;
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: #f7f9fc;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer utilities {
+  /* Gradients */
+  .gradient-brand {
+    background: linear-gradient(135deg, #01AEF0 0%, #0073A8 100%);
+  }
+  .gradient-brand-vivid {
+    background: linear-gradient(140deg, #5EC1F4 0%, #01AEF0 40%, #0073A8 100%);
+  }
+  .gradient-yellow {
+    background: linear-gradient(135deg, #F5C518 0%, #FFF84E 100%);
+  }
+
+  /* Glass surfaces */
+  .glass {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  .glass-dark {
+    background: rgba(0,115,168,0.15);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+
+  /* Double-bezel card (from high-end-visual-design skill) */
+  .bezel {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 6px;
+    border-radius: 1.75rem;
+  }
+  .bezel-inner {
+    background: white;
+    border-radius: calc(1.75rem - 6px);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.9);
+  }
+
+  /* Spring transition */
+  .spring {
+    transition: all 500ms var(--ease-spring);
+  }
+  .spring-fast {
+    transition: all 280ms var(--ease-spring);
+  }
+
+  /* Eyebrow pill */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 9999px;
+  }
+
+  /* Noise overlay (fixed, pointer-events-none) */
+  .noise::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px;
+  }
+}

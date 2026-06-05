@@ -1,0 +1,35 @@
+# Dependencies
+node_modules
+pnpm-lock.yaml
+
+# Build output
+dist
+.next
+out
+
+# Environment (SECRETS — never commit)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Temp
+/tmp
+.cache
+
+# Mockup images (not needed in repo)
+*.jpeg
+image*.png
