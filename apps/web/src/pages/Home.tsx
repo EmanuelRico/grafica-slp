@@ -60,7 +60,7 @@ function ActionCard({ icon, label, sub, color, onClick, delay }: {
 
 export default function Home() {
   const navigate = useNavigate();
-
+  useEffect(() => { document.title = 'GRAFICA SLP'; }, []);
   // Magnetic mouse effect on the headline area (Emil Kowalski pattern)
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);

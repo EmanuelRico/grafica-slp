@@ -13,9 +13,9 @@ export class OrdersService {
   ) {}
 
   async generateOrderNumber(): Promise<string> {
-    const count = await this.orderModel.countDocuments();
-    const num = String(count + 1).padStart(6, '0');
-    return `GSLP-${num}`;
+    const last = await this.orderModel.findOne({}, { orderNumber: 1 }).sort({ orderNumber: -1 });
+    const next = last ? parseInt(last.orderNumber.replace('GSLP-', ''), 10) + 1 : 1;
+    return `GSLP-${String(next).padStart(6, '0')}`;
   }
 
   async create(dto: CreateOrderDto): Promise<OrderDocument> {
