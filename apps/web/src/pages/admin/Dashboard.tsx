@@ -320,10 +320,10 @@ export default function AdminDashboard() {
                       <p className="text-xs text-slate-500 mt-0.5 truncate">{order.customerName} · {order.customerPhone}</p>
                     </div>
 
-                    {/* Price */}
-                    <div className="text-right hidden sm:block">
+                    {/* Price & specs */}
+                    <div className="text-right">
                       <p className="text-sm font-bold text-brand-blue">${order.estimatedPrice.toLocaleString('es-MX')}</p>
-                      <p className="text-xs text-slate-400">{order.lengthCm}cm × {order.repetitions}</p>
+                      <p className="text-md font-bold text-slate-700 mt-0.5">{order.lengthCm}cm × {order.repetitions}</p>
                     </div>
 
                     {/* Inline status dropdown */}
