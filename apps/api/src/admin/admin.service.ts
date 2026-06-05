@@ -58,12 +58,6 @@ export class AdminService {
   }
 
   async markWhatsappSent(id: string): Promise<OrderDocument> {
-    const order = await this.orderModel.findOneAndUpdate(
-      { _id: id, 'statusHistory.to': undefined },
-      {},
-      { new: true },
-    );
-    // Set whatsappSentAt on the last history entry matching current status
     const doc = await this.orderModel.findById(id);
     if (!doc) throw new NotFoundException('Order not found');
     const idx = [...doc.statusHistory].reverse().findIndex(h => h.to === doc.status);
