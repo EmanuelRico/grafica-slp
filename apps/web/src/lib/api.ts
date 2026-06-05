@@ -101,6 +101,9 @@ export interface Order {
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
+  wantsInvoice?: boolean;
+  invoiceName?: string;
+  invoiceCFDI?: string;
   printType: { slug: string; name: string; widthCm: number; minLengthCm: number; pricePerMeter: number };
   lengthCm: number;
   repetitions: number;

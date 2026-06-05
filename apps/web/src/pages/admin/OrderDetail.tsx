@@ -206,6 +206,9 @@ GRAFICA SLP`,
                   ['Nombre',   order.customerName],
                   ['WhatsApp', order.customerPhone],
                   ...(order.customerEmail ? [['Email', order.customerEmail]] : []),
+                  ...(order.wantsInvoice ? [['Factura', 'Sí']] : []),
+                  ...(order.invoiceName ? [['Razón social', order.invoiceName]] : []),
+                  ...(order.invoiceCFDI ? [['Uso CFDI', order.invoiceCFDI]] : []),
                 ].map(([label, val]) => (
                   <div key={label} className="flex justify-between gap-2">
                     <span className="text-slate-400 shrink-0">{label}</span>
