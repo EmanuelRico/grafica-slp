@@ -98,7 +98,8 @@ export class AdminService {
   }
 
   async bulkDeleteDelivered(): Promise<{ deleted: number; filesDeleted: number; errors: string[] }> {
-    const orders = await this.orderModel.find({ status: OrderStatus.DELIVERED });
+    const statuses = [OrderStatus.DELIVERED, OrderStatus.CANCELLED];
+    const orders = await this.orderModel.find({ status: { $in: statuses } });
     let filesDeleted = 0;
     const errors: string[] = [];
 
@@ -120,7 +121,7 @@ export class AdminService {
     );
 
     const deleted = orders.length;
-    await this.orderModel.deleteMany({ status: OrderStatus.DELIVERED });
+    await this.orderModel.deleteMany({ status: { $in: statuses } });
 
     return { deleted, filesDeleted, errors };
   }

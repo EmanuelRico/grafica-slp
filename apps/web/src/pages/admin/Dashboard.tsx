@@ -134,9 +134,9 @@ export default function AdminDashboard() {
               <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
                 <span className="text-2xl">🗑</span>
               </div>
-              <h3 className="text-lg font-black text-brand-ink">¿Eliminar pedidos entregados?</h3>
+              <h3 className="text-lg font-black text-brand-ink">¿Eliminar pedidos entregados y cancelados?</h3>
               <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-                Se eliminarán todos los pedidos con estado <strong>"Entregado"</strong> y sus archivos de almacenamiento. Esta acción no se puede deshacer.
+                Se eliminarán todos los pedidos con estado <strong>"Entregado"</strong> / <strong>"Cancelado"</strong> y sus archivos de almacenamiento. Esta acción no se puede deshacer.
               </p>
               <div className="mt-6 flex gap-3">
                 <button onClick={() => setShowDeleteModal(false)}
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
           <div className="ml-auto flex items-center gap-3">
             <button onClick={() => setShowDeleteModal(true)} disabled={deleting}
               className="hidden sm:flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 font-medium transition-colors disabled:opacity-50 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1.5">
-              🗑 {deleting ? 'Eliminando...' : 'Limpiar entregados'}
+              🗑 {deleting ? 'Eliminando...' : 'Limpiar entregados/cancelados'}
             </button>
             <span className="text-sm text-slate-500 hidden sm:block">{user?.name}</span>
             <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-red-500 transition-colors">
