@@ -134,6 +134,14 @@ Puedes pasar a recogerlo cuando gustes dentro de nuestro horario de atención.
 Gracias por crear con nosotros 💙
 
 GRAFICA SLP`,
+      cancelled:
+`❌ Pedido cancelado
+
+Hola, te informamos que tu pedido #${order.orderNumber} ha sido cancelado.
+
+Si tienes alguna duda, no dudes en contactarnos.
+
+GRAFICA SLP`,
     };
     const text = messages[order.status] || '';
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
@@ -311,7 +319,7 @@ GRAFICA SLP`,
             </AnimatePresence>
 
             {/* WhatsApp direct link — only for received and finished */}
-            {['received', 'finished'].includes(order.status) && (() => {
+            {['received', 'finished', 'cancelled'].includes(order.status) && (() => {
               const sentKey = `wa_sent_${order._id}_${order.status}`;
               const wasSent = localStorage.getItem(sentKey) === '1';
               return (

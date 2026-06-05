@@ -278,13 +278,14 @@ export default function AdminDashboard() {
                 const { Icon } = cfg;
                 const sentKey = `wa_sent_${order._id}_${order.status}`;
                 const wasSent = localStorage.getItem(sentKey) === '1';
-                const showWa = ['received', 'finished'].includes(order.status);
+                const showWa = ['received', 'finished', 'cancelled'].includes(order.status);
 
                 const getWaUrl = () => {
                   const phone = order.customerPhone.replace(/\D/g, '');
                   const msgs: Record<string, string> = {
                     received: `✨ Pedido recibido\n\n¡Tu archivo ya está en nuestras manos!\n\n🧾 Pedido: #${order.orderNumber}\n\nHemos recibido tu archivo correctamente y comenzaremos a procesarlo.\n\nTe notificaremos nuevamente cuando esté listo.\n\nGRAFICA SLP`,
                     finished: `🎉 Pedido terminado\n\n¡Buenas noticias!\n\nTu pedido #${order.orderNumber} ya está listo.\n\nPuedes pasar a recogerlo cuando gustes dentro de nuestro horario de atención.\n\nGracias por crear con nosotros 💙\n\nGRAFICA SLP`,
+                    cancelled: `❌ Pedido cancelado\n\nHola, te informamos que tu pedido #${order.orderNumber} ha sido cancelado.\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nGRAFICA SLP`,
                   };
                   return `https://wa.me/${phone}?text=${encodeURIComponent(msgs[order.status] || '')}`;
                 };
