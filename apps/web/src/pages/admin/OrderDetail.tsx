@@ -20,6 +20,20 @@ function FilePreview({ file }: { file: Order['file'] }) {
     ? `${(import.meta as any).env?.VITE_R2_PUBLIC_URL || ''}/${file.storageKey}`
     : null;
 
+  const handleDownload = async () => {                                                                         
+    if (!fileUrl) return;                                                                                      
+    const res = await fetch(fileUrl);                                                                          
+    const blob = await res.blob();                                                                             
+    const url = URL.createObjectURL(blob);                                                                     
+    const a = document.createElement('a');                                                                     
+    a.href = url;                                                                                              
+    a.download = file?.originalName || 'download';                                                             
+    document.body.appendChild(a);                                                                              
+    a.click();                                                                                                 
+    a.remove();                                                                                                
+    URL.revokeObjectURL(url);                                                                                  
+  };
+
   return (
     <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
       {/* Preview area */}
@@ -49,10 +63,10 @@ function FilePreview({ file }: { file: Order['file'] }) {
               <ArrowSquareOut size={13} /> Abrir
             </a>
             <span className="text-slate-200">|</span>
-            <a href={fileUrl} download={file?.originalName}
+            <button onClick={handleDownload}
               className="flex items-center gap-1 text-xs text-slate-500 font-semibold hover:text-brand-ink transition-colors">
               <DownloadSimple size={13} /> Descargar
-            </a>
+            </button>
           </div>
         )}
       </div>
