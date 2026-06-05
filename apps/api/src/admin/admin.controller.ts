@@ -44,6 +44,11 @@ export class AdminController {
     return { message: await this.adminService.getWhatsAppMessage(id) };
   }
 
+  @Patch('orders/:id/whatsapp-sent')
+  async markWhatsappSent(@Param('id') id: string) {
+    return this.adminService.markWhatsappSent(id);
+  }
+
   @Delete('orders/bulk/delivered')
   async bulkDeleteDelivered() {
     return this.adminService.bulkDeleteDelivered();

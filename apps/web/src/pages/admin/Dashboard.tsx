@@ -276,8 +276,7 @@ export default function AdminDashboard() {
               {orders.map((order) => {
                 const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.received;
                 const { Icon } = cfg;
-                const sentKey = `wa_sent_${order._id}_${order.status}`;
-                const wasSent = localStorage.getItem(sentKey) === '1';
+                const wasSent = order.statusHistory.some(h => h.to === order.status && h.whatsappSentAt);
                 const showWa = ['received', 'finished', 'cancelled'].includes(order.status);
 
                 const getWaUrl = () => {
@@ -306,7 +305,7 @@ export default function AdminDashboard() {
 
                 const handleWaSent = (e: React.MouseEvent) => {
                   e.stopPropagation();
-                  setTimeout(() => { localStorage.setItem(sentKey, '1'); fetchOrders(); }, 500);
+                  api.admin.markWhatsappSent(order._id).then(() => fetchOrders());
                 };
 
                 return (

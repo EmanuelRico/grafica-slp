@@ -55,6 +55,8 @@ export const api = {
       req<Order>(`/admin/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, note }) }),
     getWhatsappMessage: (id: string) =>
       req<{ message: string }>(`/admin/orders/${id}/whatsapp-message`),
+    markWhatsappSent: (id: string) =>
+      req<Order>(`/admin/orders/${id}/whatsapp-sent`, { method: 'PATCH' }),
     bulkDeleteDelivered: () =>
       req<{ deleted: number; filesDeleted: number; errors: string[] }>('/admin/orders/bulk/delivered', { method: 'DELETE' }),
     storageStats: () =>
@@ -105,7 +107,7 @@ export interface Order {
   estimatedPrice: number;
   comments?: string;
   status: string;
-  statusHistory: { from: string; to: string; changedAt: string; changedBy?: string }[];
+  statusHistory: { from: string; to: string; changedAt: string; changedBy?: string; whatsappSentAt?: string }[];
   file: { storageKey: string; originalName: string; fileSizeBytes: number; mimeType: string };
   createdAt: string;
 }

@@ -57,6 +57,22 @@ export class AdminService {
     return order.save();
   }
 
+  async markWhatsappSent(id: string): Promise<OrderDocument> {
+    const order = await this.orderModel.findOneAndUpdate(
+      { _id: id, 'statusHistory.to': undefined },
+      {},
+      { new: true },
+    );
+    // Set whatsappSentAt on the last history entry matching current status
+    const doc = await this.orderModel.findById(id);
+    if (!doc) throw new NotFoundException('Order not found');
+    const idx = [...doc.statusHistory].reverse().findIndex(h => h.to === doc.status);
+    if (idx === -1) throw new NotFoundException('No status history entry found');
+    const realIdx = doc.statusHistory.length - 1 - idx;
+    doc.statusHistory[realIdx].whatsappSentAt = new Date();
+    return doc.save();
+  }
+
   async getWhatsAppMessage(id: string): Promise<string> {
     const order = await this.getOrder(id);
     const statusLabels: Record<string, string> = {

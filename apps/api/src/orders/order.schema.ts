@@ -18,6 +18,7 @@ class StatusHistoryEntry {
   @Prop() changedBy: string;
   @Prop() note: string;
   @Prop({ default: Date.now }) changedAt: Date;
+  @Prop() whatsappSentAt?: Date;
 }
 
 @Schema({ _id: false })

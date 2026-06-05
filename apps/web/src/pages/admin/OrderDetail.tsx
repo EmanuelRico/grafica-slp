@@ -320,8 +320,8 @@ GRAFICA SLP`,
 
             {/* WhatsApp direct link — only for received and finished */}
             {['received', 'finished', 'cancelled'].includes(order.status) && (() => {
-              const sentKey = `wa_sent_${order._id}_${order.status}`;
-              const wasSent = localStorage.getItem(sentKey) === '1';
+              const wasSent = order.statusHistory.some(h => h.to === order.status && h.whatsappSentAt);
+
               return (
               <div className="mt-4 pt-4 border-t border-slate-100">
                 <p className="text-xs text-slate-400 mb-2">Notificar al cliente</p>
@@ -336,10 +336,7 @@ GRAFICA SLP`,
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => {
-                        setTimeout(() => {
-                          localStorage.setItem(sentKey, '1');
-                          setOrder({ ...order });
-                        }, 500);
+                        api.admin.markWhatsappSent(order._id).then(updated => setOrder(updated));
                       }}
                       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-400 text-green-600 hover:bg-green-50 transition-colors"
                     >
