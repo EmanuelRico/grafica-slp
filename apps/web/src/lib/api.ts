@@ -41,8 +41,11 @@ export const api = {
     }),
 
   uploadToR2: async (uploadUrl: string, file: File) => {
-    const res = await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
-    if (!res.ok) throw new Error('Error subiendo archivo');
+    loadingHooks.start();
+    try {
+      const res = await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+      if (!res.ok) throw new Error('Error subiendo archivo');
+    } finally { loadingHooks.done(); }
   },
 
   createOrder: (data: CreateOrderPayload) =>

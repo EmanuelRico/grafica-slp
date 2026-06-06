@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CaretLeft, File, FilePdf, User, Printer, Clock, ArrowSquareOut, DownloadSimple, WhatsappLogo, CheckCircle } from '@phosphor-icons/react';
-import { api, Order } from '../../lib/api';
+import { api, Order, loadingHooks } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 
 const STATUS_OPTIONS = [
@@ -25,6 +25,7 @@ function FilePreview({ file }: { file: Order['file'] }) {
   const handleDownload = async () => {
     if (!file?.storageKey || downloading) return;
     setDownloading(true);
+    loadingHooks.start();
     try {
       const token = localStorage.getItem('token');
       const base = (import.meta as any).env?.VITE_API_URL || '/api/v1';
@@ -42,6 +43,7 @@ function FilePreview({ file }: { file: Order['file'] }) {
       window.open(fileUrl!, '_blank');
     } finally {
       setDownloading(false);
+      loadingHooks.done();
     }
   };
 
