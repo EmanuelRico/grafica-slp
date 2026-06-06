@@ -67,6 +67,12 @@ export class AdminService {
     return doc.save();
   }
 
+  async markInvoiced(id: string): Promise<OrderDocument> {
+    const doc = await this.orderModel.findByIdAndUpdate(id, { invoicedAt: new Date() }, { new: true });
+    if (!doc) throw new NotFoundException('Order not found');
+    return doc;
+  }
+
   async getWhatsAppMessage(id: string): Promise<string> {
     const order = await this.getOrder(id);
     const statusLabels: Record<string, string> = {

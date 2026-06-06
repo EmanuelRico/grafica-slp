@@ -50,6 +50,7 @@ export class Order {
   @Prop({ default: false }) wantsInvoice: boolean;
   @Prop() invoiceName: string;
   @Prop() invoiceCFDI: string;
+  @Prop() invoicedAt: Date;
 
   @Prop({ type: PrintTypeSnapshot, required: true }) printType: PrintTypeSnapshot;
 

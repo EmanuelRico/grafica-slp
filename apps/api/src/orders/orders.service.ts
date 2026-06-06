@@ -1,16 +1,28 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { S3Client, DeleteObjectCommand } from @aws-sdk/client-s3;
 import { Order, OrderDocument, OrderStatus } from './order.schema';
 import { PrintType, PrintTypeDocument } from '../print-types/print-type.schema';
 import { CreateOrderDto } from './orders.dto';
 
 @Injectable()
 export class OrdersService {
+  private s3: S3Client;
+
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
     @InjectModel(PrintType.name) private printTypeModel: Model<PrintTypeDocument>,
-  ) {}
+  ) {
+    this.s3 = new S3Client({
+      region: 'auto',
+      endpoint: 'https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com',
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+      },
+    });
+  }
 
   async generateOrderNumber(): Promise<string> {
     const last = await this.orderModel.findOne({}, { orderNumber: 1 }).sort({ orderNumber: -1 });
@@ -67,7 +79,16 @@ export class OrdersService {
       statusHistory: [{ from: null, to: OrderStatus.RECEIVED, changedAt: new Date() }],
     });
 
-    return order.save();
+    try {
+      return await order.save();
+    } catch (err) {
+      //Cleanup orphaned file from R2
+      this.s3.send(new DeleteObjectCommand({
+        Bucket: ProcessingInstruction.env.R2_BUCKET_NAME || 'graficaslp-files',
+        Key: dto.fileKey,
+      })).catch(() => {});
+      throw err;
+    }
   }
 
   async track(q: string): Promise<any> {

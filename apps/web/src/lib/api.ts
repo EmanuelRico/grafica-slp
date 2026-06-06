@@ -57,6 +57,8 @@ export const api = {
       req<{ message: string }>(`/admin/orders/${id}/whatsapp-message`),
     markWhatsappSent: (id: string) =>
       req<Order>(`/admin/orders/${id}/whatsapp-sent`, { method: 'PATCH' }),
+    markInvoiced: (id: string) =>
+      req<Order>(`/admin/orders/${id}/invoiced`, { method: 'PATCH' }),
     bulkDeleteDelivered: () =>
       req<{ deleted: number; filesDeleted: number; errors: string[] }>('/admin/orders/bulk/delivered', { method: 'DELETE' }),
     storageStats: () =>
@@ -86,6 +88,7 @@ export interface CreateOrderPayload {
   wantsInvoice?: boolean;
   invoiceName?: string;
   invoiceCFDI?: string;
+  invoicedAt?: string;
   printTypeSlug: string;
   lengthCm: number;
   repetitions: number;
@@ -104,6 +107,7 @@ export interface Order {
   wantsInvoice?: boolean;
   invoiceName?: string;
   invoiceCFDI?: string;
+  invoicedAt?: string;
   printType: { slug: string; name: string; widthCm: number; minLengthCm: number; pricePerMeter: number };
   lengthCm: number;
   repetitions: number;

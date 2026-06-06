@@ -49,6 +49,11 @@ export class AdminController {
     return this.adminService.markWhatsappSent(id);
   }
 
+  @Patch('orders/:id/invoiced')
+  async markInvoiced(@Param('id') id: string) {
+    return this.adminService.markInvoiced(id);
+  }
+
   @Delete('orders/bulk/delivered')
   async bulkDeleteDelivered() {
     return this.adminService.bulkDeleteDelivered();
