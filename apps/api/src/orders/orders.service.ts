@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { S3Client, DeleteObjectCommand } from @aws-sdk/client-s3;
+import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { Order, OrderDocument, OrderStatus } from './order.schema';
 import { PrintType, PrintTypeDocument } from '../print-types/print-type.schema';
 import { CreateOrderDto } from './orders.dto';
