@@ -10,7 +10,7 @@ class UploadUrlDto {
 
 @Controller('files')
 export class FilesController {
-  constructor(private readonly filesService: FilesService) { }
+  constructor(private readonly filesService: FilesService) {}
 
   @Post('upload-url')
   async getUploadUrl(@Body() dto: UploadUrlDto) {
@@ -23,5 +23,11 @@ export class FilesController {
   async download(@Param('key') key: string) {
     const { stream, contentType } = await this.filesService.getFileStream(key);
     return new StreamableFile(stream, { type: contentType });
+  }
+
+  @Post('cleanup')
+  @UseGuards(AuthGuard('jwt'))
+  async cleanup() {
+    return this.filesService.cleanupOrphanedFiles();
   }
 }
