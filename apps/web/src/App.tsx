@@ -8,6 +8,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminOrderDetail from './pages/admin/OrderDetail';
 import { AuthProvider, useAuth } from './lib/auth';
 import { ToastProvider } from './components/ui/Toast';
+import { LoadingProvider } from './components/ui/LoadingBar';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
@@ -17,6 +18,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <AuthProvider>
+    <LoadingProvider>
     <ToastProvider>
     <AnimatePresence mode="wait">
       <Routes>
@@ -31,6 +33,7 @@ export default function App() {
       </Routes>
     </AnimatePresence>
     </ToastProvider>
+    </LoadingProvider>
     </AuthProvider>
   );
 }
