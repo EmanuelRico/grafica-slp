@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { loadingHooks } from '@/lib/api';
+import { loadingHooks } from '../../lib/api';
 
 interface LoadingCtx { start: () => void; done: () => void; }
 const Ctx = createContext<LoadingCtx>({ start: () => { }, done: () => { } });
