@@ -23,7 +23,7 @@ function FilePreview({ file }: { file: Order['file'] }) {
   const [downloading, setDownloading] = useState(false);
 
   const handleDownload = async () => {
-    if (!fileUrl?.storageKey || downloading) return;
+    if (!file?.storageKey || downloading) return;
     setDownloading(true);
     try {
       const token = localStorage.getItem('token');
@@ -39,7 +39,7 @@ function FilePreview({ file }: { file: Order['file'] }) {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      window.open(fileUrl, '_blank');
+      window.open(fileUrl!, '_blank');
     } finally {
       setDownloading(false);
     }
