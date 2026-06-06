@@ -10,6 +10,12 @@ async function req<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   });
   if (!res.ok) {
+    if(res.status === 401 && token) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href('/admin/login');
+      throw new Error('Sesión expirada');
+    }
     const err = await res.json().catch(() => ({ message: 'Error desconocido' }));
     throw new Error(err.message || 'Error en la solicitud');
   }

@@ -72,6 +72,5 @@ export class Order {
 export const OrderSchema = SchemaFactory.createForClass(Order);
 
 // Indexes for tracking lookups and dashboard filtering
-OrderSchema.index({ orderNumber: 1 });
 OrderSchema.index({ customerPhone: 1 });
 OrderSchema.index({ status: 1, createdAt: -1 });

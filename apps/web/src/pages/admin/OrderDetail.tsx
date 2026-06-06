@@ -20,18 +20,16 @@ function FilePreview({ file }: { file: Order['file'] }) {
     ? `${(import.meta as any).env?.VITE_R2_PUBLIC_URL || ''}/${file.storageKey}`
     : null;
 
-  const handleDownload = async () => {                                                                         
-    if (!fileUrl) return;                                                                                      
-    const res = await fetch(fileUrl);                                                                          
-    const blob = await res.blob();                                                                             
-    const url = URL.createObjectURL(blob);                                                                     
-    const a = document.createElement('a');                                                                     
-    a.href = url;                                                                                              
-    a.download = file?.originalName || 'download';                                                             
-    document.body.appendChild(a);                                                                              
-    a.click();                                                                                                 
-    a.remove();                                                                                                
-    URL.revokeObjectURL(url);                                                                                  
+  const handleDownload = () => {                                                                         
+    if (!fileUrl) return;                                                                                                                                                        
+    const a = document.createElement('a');
+    a.href = fileUrl;
+    a.download = file?.originalName || 'download';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer'
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   return (
