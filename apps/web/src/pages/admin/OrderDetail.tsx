@@ -23,15 +23,19 @@ function FilePreview({ file }: { file: Order['file'] }) {
   const [downloading, setDownloading] = useState(false);
 
   const handleDownload = async () => {
-    if (!fileUrl || downloading) return;
+    if (!fileUrl?.storageKey || downloading) return;
     setDownloading(true);
     try {
-      const res = await fetch(fileUrl, { mode: 'cors' });
+      const token = localStorage.getItem('token');
+      const base = (import.meta as any).env?.VITE_API_URL || '/api/v1';
+      const res = await fetch(`${base}/files/download/${file.storageKey}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = file?.originalName || 'download';
+      a.download = file.originalName || 'download';
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -292,8 +296,8 @@ GRAFICA SLP`,
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setNewStatus(s.value)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 ${newStatus === s.value
-                      ? `${s.color} border-current`
-                      : 'border-transparent bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    ? `${s.color} border-current`
+                    : 'border-transparent bg-slate-50 text-slate-600 hover:bg-slate-100'
                     }`}
                 >
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`} />

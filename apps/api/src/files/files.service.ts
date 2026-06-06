@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Readable } from 'stream';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -32,5 +33,11 @@ export class FilesService {
 
     const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 900 });
     return { uploadUrl, fileKey: key };
+  }
+
+  async getFileStream(key: string): Promise<{ stream: Readable; contentType: string }> {
+    const res = await this.s3.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+    if (!res.Body) throw new NotFoundException('File not found');
+    return { stream: res.Body as Readable, contentType: res.ContentType || 'application/octet-stream' };
   }
 }
