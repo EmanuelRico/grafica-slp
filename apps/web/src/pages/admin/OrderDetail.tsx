@@ -6,11 +6,11 @@ import { api, Order } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 
 const STATUS_OPTIONS = [
-  { value: 'received',      label: 'Recibido',       color: 'bg-blue-50 text-blue-700 border-blue-300',       dot: 'bg-blue-500' },
-  { value: 'in_production', label: 'En Producción',  color: 'bg-purple-50 text-purple-700 border-purple-300', dot: 'bg-purple-500' },
-  { value: 'finished',      label: 'Terminado',      color: 'bg-green-50 text-green-700 border-green-300',    dot: 'bg-green-500' },
-  { value: 'delivered',     label: 'Entregado',      color: 'bg-slate-50 text-slate-600 border-slate-300',    dot: 'bg-slate-400' },
-  { value: 'cancelled',     label: 'Cancelado',      color: 'bg-red-50 text-red-600 border-red-300',          dot: 'bg-red-500' },
+  { value: 'received', label: 'Recibido', color: 'bg-blue-50 text-blue-700 border-blue-300', dot: 'bg-blue-500' },
+  { value: 'in_production', label: 'En Producción', color: 'bg-purple-50 text-purple-700 border-purple-300', dot: 'bg-purple-500' },
+  { value: 'finished', label: 'Terminado', color: 'bg-green-50 text-green-700 border-green-300', dot: 'bg-green-500' },
+  { value: 'delivered', label: 'Entregado', color: 'bg-slate-50 text-slate-600 border-slate-300', dot: 'bg-slate-400' },
+  { value: 'cancelled', label: 'Cancelado', color: 'bg-red-50 text-red-600 border-red-300', dot: 'bg-red-500' },
 ];
 
 function FilePreview({ file }: { file: Order['file'] }) {
@@ -20,16 +20,25 @@ function FilePreview({ file }: { file: Order['file'] }) {
     ? `${(import.meta as any).env?.VITE_R2_PUBLIC_URL || ''}/${file.storageKey}`
     : null;
 
-  const handleDownload = () => {                                                                         
-    if (!fileUrl) return;                                                                                                                                                        
-    const a = document.createElement('a');
-    a.href = fileUrl;
-    a.download = file?.originalName || 'download';
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer'
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!fileUrl || downloading) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(fileUrl, { mode: 'cors' });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file?.originalName || 'download';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(fileUrl, '_blank');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -78,7 +87,7 @@ export default function AdminOrderDetail() {
   const toast = useToast();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving]   = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [note, setNote] = useState('');
 
@@ -110,7 +119,7 @@ export default function AdminOrderDetail() {
     const phone = order.customerPhone.replace(/\D/g, '');
     const messages: Record<string, string> = {
       received:
-`✨ Pedido recibido
+        `✨ Pedido recibido
 
 ¡Tu archivo ya está en nuestras manos!
 
@@ -122,7 +131,7 @@ Te notificaremos nuevamente cuando esté listo.
 
 GRAFICA SLP`,
       finished:
-`🎉 Pedido terminado
+        `🎉 Pedido terminado
 
 ¡Buenas noticias!
 
@@ -134,7 +143,7 @@ Gracias por crear con nosotros 💙
 
 GRAFICA SLP`,
       cancelled:
-`❌ Pedido cancelado
+        `❌ Pedido cancelado
 
 Hola, te informamos que tu pedido #${order.orderNumber} ha sido cancelado.
 
@@ -201,7 +210,7 @@ GRAFICA SLP`,
               </h3>
               <div className="space-y-2.5 text-sm">
                 {[
-                  ['Nombre',   order.customerName],
+                  ['Nombre', order.customerName],
                   ['WhatsApp', order.customerPhone],
                   ...(order.customerEmail ? [['Email', order.customerEmail]] : []),
                   ...(order.wantsInvoice ? [['Factura', 'Sí']] : []),
@@ -211,8 +220,8 @@ GRAFICA SLP`,
                   <div key={label} className="flex justify-between gap-2">
                     <span className="text-slate-400 shrink-0">{label}</span>
                     {label === 'WhatsApp'
-                      ? <a href={`https://wa.me/${val.replace(/\D/g,'')}`} target="_blank" rel="noreferrer"
-                          className="font-semibold text-brand-blue hover:underline truncate">{val}</a>
+                      ? <a href={`https://wa.me/${val.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
+                        className="font-semibold text-brand-blue hover:underline truncate">{val}</a>
                       : <span className="font-semibold text-brand-ink truncate">{val}</span>}
                   </div>
                 ))}
@@ -226,11 +235,11 @@ GRAFICA SLP`,
               </h3>
               <div className="space-y-2.5 text-sm">
                 {[
-                  ['Tipo',       order.printType.name],
-                  ['Longitud',   `${order.lengthCm} cm`],
+                  ['Tipo', order.printType.name],
+                  ['Longitud', `${order.lengthCm} cm`],
                   ['Repeticiones', String(order.repetitions)],
-                  ['Precio est.',  `$${order.estimatedPrice.toLocaleString('es-MX')} MXN`],
-                  ['Fecha',      new Date(order.createdAt).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' })],
+                  ['Precio est.', `$${order.estimatedPrice.toLocaleString('es-MX')} MXN`],
+                  ['Fecha', new Date(order.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })],
                 ].map(([label, val]) => (
                   <div key={label} className="flex justify-between gap-2">
                     <span className="text-slate-400 shrink-0">{label}</span>
@@ -282,11 +291,10 @@ GRAFICA SLP`,
                 <motion.button key={s.value} type="button"
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setNewStatus(s.value)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 ${
-                    newStatus === s.value
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 ${newStatus === s.value
                       ? `${s.color} border-current`
                       : 'border-transparent bg-slate-50 text-slate-600 hover:bg-slate-100'
-                  }`}
+                    }`}
                 >
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`} />
                   {s.label}
@@ -325,31 +333,31 @@ GRAFICA SLP`,
               const wasSent = order.statusHistory.some(h => h.to === order.status && h.whatsappSentAt);
 
               return (
-              <div className="mt-4 pt-4 border-t border-slate-100">
-                <p className="text-xs text-slate-400 mb-2">Notificar al cliente</p>
-                {wasSent ? (
-                  <div className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-200 bg-green-50 text-green-600">
-                    <CheckCircle size={16} weight="fill" /> Mensaje enviado
-                  </div>
-                ) : (
-                  <>
-                    <a
-                      href={getWhatsAppUrl(order)}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={() => {
-                        api.admin.markWhatsappSent(order._id).then(updated => setOrder(updated));
-                      }}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-400 text-green-600 hover:bg-green-50 transition-colors"
-                    >
-                      <WhatsappLogo size={16} weight="fill" /> Enviar por WhatsApp
-                    </a>
-                  </>
-                )}
-                <p className="text-[10px] text-slate-400 mt-2 text-center leading-relaxed">
-                  {wasSent ? 'Ya se notificó al cliente para este estado' : 'Abre WhatsApp con el mensaje listo'}
-                </p>
-              </div>
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <p className="text-xs text-slate-400 mb-2">Notificar al cliente</p>
+                  {wasSent ? (
+                    <div className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-200 bg-green-50 text-green-600">
+                      <CheckCircle size={16} weight="fill" /> Mensaje enviado
+                    </div>
+                  ) : (
+                    <>
+                      <a
+                        href={getWhatsAppUrl(order)}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => {
+                          api.admin.markWhatsappSent(order._id).then(updated => setOrder(updated));
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-400 text-green-600 hover:bg-green-50 transition-colors"
+                      >
+                        <WhatsappLogo size={16} weight="fill" /> Enviar por WhatsApp
+                      </a>
+                    </>
+                  )}
+                  <p className="text-[10px] text-slate-400 mt-2 text-center leading-relaxed">
+                    {wasSent ? 'Ya se notificó al cliente para este estado' : 'Abre WhatsApp con el mensaje listo'}
+                  </p>
+                </div>
               );
             })()}
           </motion.section>
