@@ -84,7 +84,7 @@ export class OrdersService {
     } catch (err) {
       //Cleanup orphaned file from R2
       this.s3.send(new DeleteObjectCommand({
-        Bucket: ProcessingInstruction.env.R2_BUCKET_NAME || 'graficaslp-files',
+        Bucket: process.env.R2_BUCKET_NAME || 'graficaslp-files',
         Key: dto.fileKey,
       })).catch(() => {});
       throw err;
