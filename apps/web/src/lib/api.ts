@@ -1,7 +1,9 @@
 const BASE = (import.meta as any).env?.VITE_API_URL || '/api/v1';
 
-// Global loading hooks — attached by LoadingProvider                                                          
-export const loadingHooks = { start: () => { }, done: () => { } };
+// Global loading hooks — attached by LoadingProvider
+export const loadingHooks = { start: () => {}, done: () => {} };
+
+let redirecting = false;
 
 async function req<T>(path: string, options?: RequestInit): Promise<T> {
   loadingHooks.start();
@@ -15,10 +17,11 @@ async function req<T>(path: string, options?: RequestInit): Promise<T> {
       ...options,
     });
     if (!res.ok) {
-      if (res.status === 401 && token) {
+      if (res.status === 401 && token && !redirecting) {
+        redirecting = true;
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/admin/login';
+        window.location.replace('/admin/login');
         throw new Error('Sesión expirada');
       }
       const err = await res.json().catch(() => ({ message: 'Error desconocido' }));
@@ -27,7 +30,6 @@ async function req<T>(path: string, options?: RequestInit): Promise<T> {
     return res.json();
   } finally {
     loadingHooks.done();
-
   }
 }
 
@@ -106,7 +108,6 @@ export interface CreateOrderPayload {
   wantsInvoice?: boolean;
   invoiceName?: string;
   invoiceCFDI?: string;
-  invoicedAt?: string;
   printTypeSlug: string;
   lengthCm: number;
   repetitions: number;
