@@ -147,6 +147,31 @@ export default function Step1Upload({ onComplete }: Props) {
 
   return (
     <div className="relative px-6 lg:px-10 py-10">
+      {/* Full-screen upload overlay */}
+      <AnimatePresence>
+        {uploading && (
+          <motion.div
+            key="upload-loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.3 } }}
+            className="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4"
+          >
+            <div className="relative w-16 h-16">
+              <svg className="w-16 h-16 -rotate-90" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="#E8F7FD" strokeWidth="5"/>
+                <motion.circle cx="40" cy="40" r="34" fill="none" stroke="#01AEF0" strokeWidth="5"
+                  strokeLinecap="round" strokeDasharray={`${2*Math.PI*34}`}
+                  animate={{ strokeDashoffset: 2*Math.PI*34 * (1 - progress/100) }}
+                  transition={{ duration: 0.3 }} />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-brand-blue">{Math.round(progress)}%</span>
+            </div>
+            <p className="text-brand-blue font-semibold text-sm">Subiendo tu archivo...</p>
+            <p className="text-slate-400 text-xs">Archivos pesados pueden tardar un momento en completarse</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Warning modal */}
       <AnimatePresence>
         {showWarning && <FileWarningModal onConfirm={handleConfirm} onCancel={handleCancel} />}
