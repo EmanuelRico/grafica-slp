@@ -101,8 +101,13 @@ export default function Step1Upload({ onComplete }: Props) {
     }
     setUploading(true); setProgress(0);
 
-    // Simulate progress feel
-    const tick = setInterval(() => setProgress(p => Math.min(p + 12, 85)), 200);
+    // Simulate progress — slows down as it approaches 90% to feel natural with large files
+    const tick = setInterval(() => setProgress(p => {
+      if (p < 50) return p + 8;
+      if (p < 75) return p + 3;
+      if (p < 90) return p + 0.5;
+      return p;
+    }), 300);
     try {
       const { uploadUrl, fileKey } = await api.getUploadUrl(file.name, file.type || 'application/octet-stream');
       await api.uploadToR2(uploadUrl, file);
@@ -209,7 +214,8 @@ export default function Step1Upload({ onComplete }: Props) {
                       </svg>
                       <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-brand-blue">{progress}%</span>
                     </div>
-                    <p className="text-brand-blue font-semibold text-sm">Subiendo archivo...</p>
+                    <p className="text-brand-blue font-semibold text-sm">Subiendo tu archivo...</p>
+                    <p className="text-slate-400 text-xs">Archivos pesados pueden tardar un momento en completarse</p>
                   </motion.div>
                 )}
 
