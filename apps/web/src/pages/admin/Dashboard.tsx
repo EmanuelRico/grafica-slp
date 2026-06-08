@@ -429,10 +429,10 @@ export default function AdminDashboard() {
         {total > 10 && (
           <div className="flex justify-center gap-2">
             <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}
-              className="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50">← Anterior</button>
+              className="px-4 py-2 text-sm font-medium border border-slate-200 rounded-lg transition-colors hover:bg-brand-blue hover:text-white hover:border-brand-blue disabled:opacity-50 disabled:pointer-events-none">← Anterior</button>
             <span className="px-4 py-2 text-sm text-slate-600">Página {page}</span>
             <button disabled={page * 10 >= total} onClick={() => setPage((p) => p + 1)}
-              className="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50">Siguiente →</button>
+              className="px-4 py-2 text-sm font-medium border border-slate-200 rounded-lg transition-colors hover:bg-brand-blue hover:text-white hover:border-brand-blue disabled:opacity-50 disabled:pointer-events-none">Siguiente →</button>
           </div>
         )}
       </div>
