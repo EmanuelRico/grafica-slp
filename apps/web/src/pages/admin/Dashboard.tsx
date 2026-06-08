@@ -139,6 +139,20 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Full-screen loading overlay — only on initial load or when returning with no data */}
+      <AnimatePresence>
+        {loading && orders.length === 0 && (
+          <motion.div
+            key="admin-loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.3 } }}
+            className="fixed inset-0 z-50 bg-slate-50 flex flex-col items-center justify-center gap-4"
+          >
+            <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-slate-400 font-medium">Cargando dashboard...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Delete confirmation modal */}
       <AnimatePresence>
         {showDeleteModal && (
