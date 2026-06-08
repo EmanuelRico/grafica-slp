@@ -426,12 +426,12 @@ export default function AdminDashboard() {
         </div>
 
         {/* Pagination */}
-        {total > 20 && (
+        {total > 10 && (
           <div className="flex justify-center gap-2">
             <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}
               className="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50">← Anterior</button>
             <span className="px-4 py-2 text-sm text-slate-600">Página {page}</span>
-            <button disabled={page * 20 >= total} onClick={() => setPage((p) => p + 1)}
+            <button disabled={page * 10 >= total} onClick={() => setPage((p) => p + 1)}
               className="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50">Siguiente →</button>
           </div>
         )}
