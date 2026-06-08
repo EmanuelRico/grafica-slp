@@ -155,19 +155,20 @@ export default function Step1Upload({ onComplete }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.3 } }}
-            className="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4"
+            className="fixed inset-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-5"
           >
-            <div className="relative w-16 h-16">
-              <svg className="w-16 h-16 -rotate-90" viewBox="0 0 80 80">
-                <circle cx="40" cy="40" r="34" fill="none" stroke="#E8F7FD" strokeWidth="5"/>
-                <motion.circle cx="40" cy="40" r="34" fill="none" stroke="#01AEF0" strokeWidth="5"
-                  strokeLinecap="round" strokeDasharray={`${2*Math.PI*34}`}
-                  animate={{ strokeDashoffset: 2*Math.PI*34 * (1 - progress/100) }}
-                  transition={{ duration: 0.3 }} />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-brand-blue">{Math.round(progress)}%</span>
+            <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
+            <div className="w-64 space-y-2">
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full gradient-brand rounded-full"
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+              <p className="text-center text-sm font-bold text-brand-blue">{Math.round(progress)}%</p>
             </div>
-            <p className="text-brand-blue font-semibold text-sm">Subiendo tu archivo...</p>
+            <p className="text-slate-700 font-semibold text-sm">Subiendo tu archivo...</p>
             <p className="text-slate-400 text-xs">Archivos pesados pueden tardar un momento en completarse</p>
           </motion.div>
         )}
