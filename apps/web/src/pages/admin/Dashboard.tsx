@@ -1,21 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, LogOut, Printer, Package, Clock, CheckCircle2, Truck } from 'lucide-react';
+import { Search, Filter, LogOut, Printer, Package, Clock, CheckCircle2, Truck, CreditCard } from 'lucide-react';
 import { api, Order } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useToast } from '../../components/ui/Toast';
 import { staggerContainer, staggerItem } from '../../components/animations/variants';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; Icon: any }> = {
-  received:      { label: 'Recibido',      color: 'text-blue-600 bg-blue-50 border-blue-200',      Icon: Package },
-  in_production: { label: 'En Producción', color: 'text-purple-600 bg-purple-50 border-purple-200', Icon: Clock },
-  finished:      { label: 'Terminado',     color: 'text-green-600 bg-green-50 border-green-200',    Icon: CheckCircle2 },
-  delivered:     { label: 'Entregado',     color: 'text-slate-600 bg-slate-50 border-slate-200',    Icon: Truck },
-  cancelled:    { label: 'Cancelado',     color: 'text-red-600 bg-red-50 border-red-200',          Icon: Package },
+  received:        { label: 'Recibido',          color: 'text-blue-600 bg-blue-50 border-blue-200',      Icon: Package },
+  in_production:   { label: 'En Producción',     color: 'text-purple-600 bg-purple-50 border-purple-200', Icon: Clock },
+  finished:        { label: 'Terminado',         color: 'text-green-600 bg-green-50 border-green-200',    Icon: CheckCircle2 },
+  pending_payment: { label: 'Pago Pendiente',    color: 'text-amber-600 bg-amber-50 border-amber-200',    Icon: CreditCard },
+  delivered:       { label: 'Entregado',         color: 'text-slate-600 bg-slate-50 border-slate-200',    Icon: Truck },
+  cancelled:       { label: 'Cancelado',         color: 'text-red-600 bg-red-50 border-red-200',          Icon: Package },
 };
 
 const STATUS_OPTIONS = [
+  { value: 'active', label: 'Activos' },
   { value: '', label: 'Todos los estados' },
   ...Object.entries(STATUS_CONFIG).map(([v, c]) => ({ value: v, label: c.label })),
 ];
@@ -36,16 +38,17 @@ export default function AdminDashboard() {
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('active');
   const [printTypeFilter, setPrintTypeFilter] = useState('');
   const [page, setPage] = useState(1);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, string> = { page: String(page) };
+      const params: Record<string, string> = { page: String(page), limit: '10' };
       if (search) params.search = search;
-      if (statusFilter) params.status = statusFilter;
+      if (statusFilter === 'active') params.status = 'received,in_production,finished,pending_payment';
+      else if (statusFilter) params.status = statusFilter;
       if (printTypeFilter) params.printType = printTypeFilter;
       const res = await api.admin.listOrders(params);
       setOrders(res.data);
@@ -54,9 +57,10 @@ export default function AdminDashboard() {
       // Retry once after 3s (handles cold starts)
       try {
         await new Promise(r => setTimeout(r, 3000));
-        const params: Record<string, string> = { page: String(page) };
+        const params: Record<string, string> = { page: String(page), limit: '10' };
         if (search) params.search = search;
-        if (statusFilter) params.status = statusFilter;
+        if (statusFilter === 'active') params.status = 'received,in_production,finished,pending_payment';
+        else if (statusFilter) params.status = statusFilter;
         if (printTypeFilter) params.printType = printTypeFilter;
         const res = await api.admin.listOrders(params);
         setOrders(res.data);
@@ -219,14 +223,14 @@ export default function AdminDashboard() {
         <div className="relative">
           {/* Connecting line (desktop only) */}
           <div className="hidden lg:block absolute top-1/2 left-8 right-8 h-0.5 bg-slate-200 -translate-y-1/2 z-0 rounded-full" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 relative z-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 relative z-10">
             {Object.entries(STATUS_CONFIG).map(([status, cfg]) => {
               const { Icon, label, color } = cfg;
               const count = statusCounts[status] || 0;
               return (
                 <motion.div key={status} whileHover={{ y: -2 }}
                   className={`bg-white rounded-xl border p-4 cursor-pointer transition-all ${statusFilter === status ? 'ring-2 ring-brand-blue shadow-md' : ''}`}
-                  onClick={() => setStatusFilter(statusFilter === status ? '' : status)}>
+                  onClick={() => setStatusFilter(statusFilter === status ? 'active' : status)}>
                   <div className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${color} mb-2`}>
                     <Icon className="w-3 h-3" /> {label}
                   </div>
