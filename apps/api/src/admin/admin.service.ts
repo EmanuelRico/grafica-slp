@@ -23,7 +23,7 @@ export class AdminService {
     const { status, printType, search, page = 1, limit = 20 } = filters;
     const query: any = {};
 
-    if (status) query.status = status;
+    if (status) query.status = status.includes(',') ? { $in: status.split(',') } : status;
     if (printType) query['printType.slug'] = printType;
     if (search) {
       query.$or = [
