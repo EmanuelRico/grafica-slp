@@ -50,8 +50,20 @@ export default function AdminDashboard() {
       const res = await api.admin.listOrders(params);
       setOrders(res.data);
       setTotal(res.total);
-    } catch {
-      toast.error('Error al cargar los pedidos');
+    } catch (e: any) {
+      // Retry once after 3s (handles cold starts)
+      try {
+        await new Promise(r => setTimeout(r, 3000));
+        const params: Record<string, string> = { page: String(page) };
+        if (search) params.search = search;
+        if (statusFilter) params.status = statusFilter;
+        if (printTypeFilter) params.printType = printTypeFilter;
+        const res = await api.admin.listOrders(params);
+        setOrders(res.data);
+        setTotal(res.total);
+      } catch {
+        toast.error('Error al cargar los pedidos');
+      }
     }
     setLoading(false);
   }, [search, statusFilter, printTypeFilter, page]);
@@ -77,11 +89,16 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchCounts(); }, [fetchCounts]);
 
-  // Refetch when tab becomes visible again
+  // Refetch when tab becomes visible again or restored from bfcache
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') { fetchOrders(); fetchCounts(); } };
+    const onPageShow = (e: PageTransitionEvent) => { if (e.persisted) { fetchOrders(); fetchCounts(); } };
     document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('pageshow', onPageShow);
+    };
   }, [fetchOrders, fetchCounts]);
 
   // Auto-refresh every 2 minutes
