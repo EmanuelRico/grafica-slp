@@ -16,7 +16,7 @@ async function bootstrap() {
   setInterval(() => {
     const hour = new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City', hour: 'numeric', hour12: false });
     if (+hour >= 9 && +hour < 19) {
-      fetch(`${url}/api/v1/print-types`).then(() => console.log('[keep-alive] ping ok')).catch(() => {});
+      fetch(`${url}/api/v1/print-types`).catch(() => {});
     }
   }, 10 * 60 * 1000);
 }
