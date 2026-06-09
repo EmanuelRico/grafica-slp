@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, LogOut, Printer, Package, Clock, CheckCircle2, Truck, CreditCard } from 'lucide-react';
+import { Search, Filter, LogOut, Printer, Package, Clock, CheckCircle2, Truck, CreditCard, Activity, Trash2 } from 'lucide-react';
 import { api, Order } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useToast } from '../../components/ui/Toast';
@@ -14,20 +14,20 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; Icon: any }>
   pending_payment: { label: 'Pago Pendiente',    color: 'text-amber-600 bg-amber-50 border-amber-200',    Icon: CreditCard },
   delivered:       { label: 'Entregado',         color: 'text-slate-600 bg-slate-50 border-slate-200',    Icon: Truck },
   cancelled:       { label: 'Cancelado',         color: 'text-red-600 bg-red-50 border-red-200',          Icon: Package },
+  active:          { label: 'Activos',            color: 'text-brand-blue bg-blue-50 border-blue-200',     Icon: Activity },
 };
 
 const STATUS_OPTIONS = [
-  { value: 'active', label: 'Activos' },
   { value: '', label: 'Todos los estados' },
-  ...Object.entries(STATUS_CONFIG).map(([v, c]) => ({ value: v, label: c.label })),
+  { value: 'active', label: 'Activos' },
+  ...Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'active').map(([v, c]) => ({ value: v, label: c.label })),
 ];
 
-const PRINT_TYPE_OPTIONS = [
-  { value: '', label: 'Todos los tipos' },
-  { value: 'dtf_uv', label: 'DTF UV' },
-  { value: 'dtf_textile', label: 'DTF Textil' },
-  { value: 'sublimation', label: 'Sublimación' },
-];
+const PRINT_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
+  dtf_uv:       { label: 'DTF UV',        color: 'text-cyan-600 bg-cyan-50 border-cyan-200' },
+  dtf_textile:  { label: 'DTF Textil',    color: 'text-pink-600 bg-pink-50 border-pink-200' },
+  sublimation:  { label: 'Sublimación',   color: 'text-orange-600 bg-orange-50 border-orange-200' },
+};
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -36,9 +36,10 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const [printTypeCounts, setPrintTypeCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('active');
+  const [statusFilter, setStatusFilter] = useState('');
   const [printTypeFilter, setPrintTypeFilter] = useState('');
   const [page, setPage] = useState(1);
 
@@ -47,7 +48,7 @@ export default function AdminDashboard() {
     try {
       const params: Record<string, string> = { page: String(page), limit: '10' };
       if (search) params.search = search;
-      if (statusFilter === 'active') params.status = 'received,in_production,finished,pending_payment';
+      if (statusFilter === 'active') params.status = 'received,in_production,finished';
       else if (statusFilter) params.status = statusFilter;
       if (printTypeFilter) params.printType = printTypeFilter;
       const res = await api.admin.listOrders(params);
@@ -59,7 +60,7 @@ export default function AdminDashboard() {
         await new Promise(r => setTimeout(r, 3000));
         const params: Record<string, string> = { page: String(page), limit: '10' };
         if (search) params.search = search;
-        if (statusFilter === 'active') params.status = 'received,in_production,finished,pending_payment';
+        if (statusFilter === 'active') params.status = 'received,in_production,finished';
         else if (statusFilter) params.status = statusFilter;
         if (printTypeFilter) params.printType = printTypeFilter;
         const res = await api.admin.listOrders(params);
@@ -74,6 +75,7 @@ export default function AdminDashboard() {
 
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteType, setDeleteType] = useState<'delivered' | 'cancelled'>('delivered');
   const [storage, setStorage] = useState<{ totalGB: number; limitGB: number; usedPercent: number } | null>(null);
   const [countdown, setCountdown] = useState(120);
   const [justRefreshed, setJustRefreshed] = useState(false);
@@ -86,8 +88,15 @@ export default function AdminDashboard() {
     try {
       const all = await api.admin.listOrders({ limit: '1000' });
       const counts: Record<string, number> = {};
-      all.data.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+      const ptCounts: Record<string, number> = {};
+      all.data.forEach(o => {
+        counts[o.status] = (counts[o.status] || 0) + 1;
+        if (o.printType?.slug) ptCounts[o.printType.slug] = (ptCounts[o.printType.slug] || 0) + 1;
+      });
+      // Count activos (received + in_production + finished)
+      counts['active'] = (counts['received'] || 0) + (counts['in_production'] || 0) + (counts['finished'] || 0);
       setStatusCounts(counts);
+      setPrintTypeCounts(ptCounts);
     } catch {}
   }, []);
 
@@ -129,7 +138,9 @@ export default function AdminDashboard() {
     setDeleting(true);
     setShowDeleteModal(false);
     try {
-      const result = await api.admin.bulkDeleteDelivered();
+      const result = deleteType === 'delivered'
+        ? await api.admin.bulkDeleteDelivered()
+        : await api.admin.bulkDeleteCancelled();
       toast.success(`${result.deleted} pedidos eliminados · ${result.filesDeleted} archivos borrados`);
       fetchOrders();
       fetchCounts();
@@ -177,9 +188,11 @@ export default function AdminDashboard() {
               <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
                 <span className="text-2xl">🗑</span>
               </div>
-              <h3 className="text-lg font-black text-brand-ink">¿Eliminar pedidos entregados y cancelados?</h3>
+              <h3 className="text-lg font-black text-brand-ink">
+                ¿Eliminar pedidos {deleteType === 'delivered' ? 'entregados' : 'cancelados'}?
+              </h3>
               <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-                Se eliminarán todos los pedidos con estado <strong>"Entregado"</strong> y <strong>"Cancelado"</strong> y sus archivos de almacenamiento. Esta acción no se puede deshacer.
+                Se eliminarán todos los pedidos con estado <strong>"{deleteType === 'delivered' ? 'Entregado' : 'Cancelado'}"</strong> y sus archivos de almacenamiento. Esta acción no se puede deshacer.
               </p>
               <div className="mt-6 flex gap-3">
                 <button onClick={() => setShowDeleteModal(false)}
@@ -206,10 +219,6 @@ export default function AdminDashboard() {
             <span className="text-xs bg-brand-blue/10 text-brand-blue font-medium px-2 py-0.5 rounded-full">Admin</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            <button onClick={() => setShowDeleteModal(true)} disabled={deleting}
-              className="hidden sm:flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 font-medium transition-colors disabled:opacity-50 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1.5">
-              🗑 {deleting ? 'Eliminando...' : 'Limpiar entregados/cancelados'}
-            </button>
             <span className="text-sm text-slate-500 hidden sm:block">{user?.name}</span>
             <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-red-500 transition-colors">
               <LogOut className="w-4 h-4" /> Salir
@@ -224,13 +233,13 @@ export default function AdminDashboard() {
           {/* Connecting line (desktop only) */}
           <div className="hidden lg:block absolute top-1/2 left-8 right-8 h-0.5 bg-slate-200 -translate-y-1/2 z-0 rounded-full" />
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 relative z-10">
-            {Object.entries(STATUS_CONFIG).map(([status, cfg]) => {
+            {Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'cancelled').map(([status, cfg]) => {
               const { Icon, label, color } = cfg;
               const count = statusCounts[status] || 0;
               return (
                 <motion.div key={status} whileHover={{ y: -2 }}
                   className={`bg-white rounded-xl border p-4 cursor-pointer transition-all ${statusFilter === status ? 'ring-2 ring-brand-blue shadow-md' : ''}`}
-                  onClick={() => setStatusFilter(statusFilter === status ? 'active' : status)}>
+                  onClick={() => setStatusFilter(statusFilter === status ? '' : status)}>
                   <div className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${color} mb-2`}>
                     <Icon className="w-3 h-3" /> {label}
                   </div>
@@ -239,6 +248,23 @@ export default function AdminDashboard() {
               );
             })}
           </div>
+        </div>
+
+        {/* Print type cards */}
+        <div className="grid grid-cols-3 gap-3">
+          {Object.entries(PRINT_TYPE_CONFIG).map(([slug, cfg]) => {
+            const count = printTypeCounts[slug] || 0;
+            return (
+              <motion.div key={slug} whileHover={{ y: -2 }}
+                className={`bg-white rounded-xl border p-4 cursor-pointer transition-all ${printTypeFilter === slug ? 'ring-2 ring-brand-blue shadow-md' : ''}`}
+                onClick={() => { setPrintTypeFilter(printTypeFilter === slug ? '' : slug); setPage(1); }}>
+                <div className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${cfg.color} mb-2`}>
+                  <Printer className="w-3 h-3" /> {cfg.label}
+                </div>
+                <p className="text-2xl font-black text-slate-800">{count}</p>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Storage widget */}
@@ -275,6 +301,23 @@ export default function AdminDashboard() {
                 ⚠️ Considera limpiar pedidos entregados para liberar espacio.
               </p>
             )}
+            {/* Bulk delete pills */}
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => { setDeleteType('delivered'); setShowDeleteModal(true); }}
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Entregados
+              </button>
+              <button
+                onClick={() => { setDeleteType('cancelled'); setShowDeleteModal(true); }}
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Cancelados
+              </button>
+            </div>
           </div>
         )}
 
@@ -291,10 +334,6 @@ export default function AdminDashboard() {
             <select className="text-sm border border-slate-200 rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
               value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
               {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <select className="text-sm border border-slate-200 rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
-              value={printTypeFilter} onChange={(e) => { setPrintTypeFilter(e.target.value); setPage(1); }}>
-              {PRINT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
         </div>
@@ -399,7 +438,7 @@ export default function AdminDashboard() {
                       onChange={handleStatusChange}
                       className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-blue/30 ${cfg.color}`}
                     >
-                      {Object.entries(STATUS_CONFIG).map(([val, c]) => (
+                      {Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'active').map(([val, c]) => (
                         <option key={val} value={val}>{c.label}</option>
                       ))}
                     </select>

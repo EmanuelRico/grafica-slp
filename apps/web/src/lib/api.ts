@@ -5,17 +5,34 @@ export const loadingHooks = { start: () => {}, done: () => {} };
 
 let redirecting = false;
 
+function httpErrorMessage(status: number, serverMsg?: string): string {
+  if (serverMsg && serverMsg !== 'Error desconocido') return serverMsg;
+  if (status === 400) return 'Los datos enviados no son válidos. Revisa la información e intenta de nuevo.';
+  if (status === 403) return 'No tienes permisos para realizar esta acción.';
+  if (status === 404) return 'No se encontró el recurso solicitado.';
+  if (status === 408) return 'La solicitud tardó demasiado. Intenta de nuevo.';
+  if (status === 413) return 'El archivo es demasiado grande para ser procesado.';
+  if (status === 429) return 'Demasiadas solicitudes. Espera un momento e intenta de nuevo.';
+  if (status >= 500) return 'Error en el servidor. Intenta de nuevo en unos segundos.';
+  return 'Ocurrió un error inesperado. Intenta de nuevo.';
+}
+
 async function req<T>(path: string, options?: RequestInit): Promise<T> {
   loadingHooks.start();
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch(`${BASE}${path}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      ...options,
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${BASE}${path}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        ...options,
+      });
+    } catch {
+      throw new Error('No se pudo conectar con el servidor. Verifica tu conexión a internet e intenta de nuevo.');
+    }
     if (!res.ok) {
       if (res.status === 401 && token && !redirecting) {
         redirecting = true;
@@ -24,8 +41,8 @@ async function req<T>(path: string, options?: RequestInit): Promise<T> {
         window.location.replace('/admin/login');
         throw new Error('Sesión expirada');
       }
-      const err = await res.json().catch(() => ({ message: 'Error desconocido' }));
-      throw new Error(err.message || 'Error en la solicitud');
+      const err = await res.json().catch(() => ({ message: undefined }));
+      throw new Error(httpErrorMessage(res.status, err.message));
     }
     return res.json();
   } finally {
@@ -45,8 +62,18 @@ export const api = {
   uploadToR2: async (uploadUrl: string, file: File) => {
     loadingHooks.start();
     try {
-      const res = await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
-      if (!res.ok) throw new Error('Error subiendo archivo');
+      let res: Response;
+      try {
+        res = await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+      } catch {
+        throw new Error('Failed to fetch');
+      }
+      if (!res.ok) {
+        if (res.status === 413) throw new Error('El archivo excede el tamaño máximo permitido.');
+        if (res.status === 403) throw new Error('El enlace de subida expiró. Intenta subir el archivo de nuevo.');
+        if (res.status >= 500) throw new Error('El servicio de almacenamiento no está disponible. Intenta en unos segundos.');
+        throw new Error(`Error subiendo archivo (HTTP ${res.status})`);
+      }
     } finally { loadingHooks.done(); }
   },
 
@@ -80,7 +107,9 @@ export const api = {
     markInvoiced: (id: string) =>
       req<Order>(`/admin/orders/${id}/invoiced`, { method: 'PATCH' }),
     bulkDeleteDelivered: () =>
-      req<{ deleted: number; filesDeleted: number; errors: string[] }>('/admin/orders/bulk/delivered', { method: 'DELETE' }),
+      req<{ deleted: number; filesDeleted: number; errors: string[] }>('/admin/orders/bulk/delivered?status=delivered', { method: 'DELETE' }),
+    bulkDeleteCancelled: () =>
+      req<{ deleted: number; filesDeleted: number; errors: string[] }>('/admin/orders/bulk/delivered?status=cancelled', { method: 'DELETE' }),
     storageStats: () =>
       req<{ totalBytes: number; totalGB: number; limitGB: number; usedPercent: number; byStatus: Record<string, { bytes: number; count: number }> }>('/admin/storage/stats'),
   },

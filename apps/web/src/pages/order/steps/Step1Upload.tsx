@@ -109,15 +109,33 @@ export default function Step1Upload({ onComplete }: Props) {
       return p;
     }), 300);
     try {
-      const { uploadUrl, fileKey } = await api.getUploadUrl(file.name, file.type || 'application/octet-stream');
-      await api.uploadToR2(uploadUrl, file);
+      let uploadUrl: string;
+      let fileKey: string;
+      try {
+        const res = await api.getUploadUrl(file.name, file.type || 'application/octet-stream');
+        uploadUrl = res.uploadUrl;
+        fileKey = res.fileKey;
+      } catch (e: any) {
+        const msg = e.message === 'Failed to fetch'
+          ? 'No se pudo conectar con el servidor. Verifica tu conexión a internet e intenta de nuevo.'
+          : (e.message || 'Error al preparar la subida');
+        throw new Error(msg);
+      }
+      try {
+        await api.uploadToR2(uploadUrl, file);
+      } catch (e: any) {
+        const msg = e.message === 'Failed to fetch' || e.message === 'Error subiendo archivo'
+          ? `No se pudo subir el archivo (${(file.size / 1024 / 1024).toFixed(1)} MB). Puede ser un problema de conexión o que el archivo es demasiado grande. Intenta de nuevo.`
+          : (e.message || 'Error al subir el archivo');
+        throw new Error(msg);
+      }
       clearInterval(tick);
       setProgress(100);
       setFileSize(file.size);
       setTimeout(() => { setUploaded(file.name); onComplete({ fileKey, originalName: file.name, fileSizeBytes: file.size, mimeType: file.type }); }, 400);
     } catch (e: any) {
       clearInterval(tick);
-      setError(e.message || 'Error al subir el archivo');
+      setError(e.message || 'Error al subir el archivo. Intenta de nuevo.');
     } finally {
       setUploading(false);
     }
