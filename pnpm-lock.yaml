@@ -97,7 +97,7 @@ importers:
         specifier: ^2.1.0
         version: 2.1.1
       framer-motion:
-        specifier: ^11.0.14
+        specifier: ^11.18.2
         version: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       lucide-react:
         specifier: ^0.356.0
@@ -111,6 +111,9 @@ importers:
       react-router-dom:
         specifier: ^6.22.3
         version: 6.30.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      simple-parallax-js:
+        specifier: ^6.3.3
+        version: 6.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@types/canvas-confetti':
         specifier: ^1.6.4
@@ -2500,6 +2503,12 @@ packages:
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
+
+  simple-parallax-js@6.3.3:
+    resolution: {integrity: sha512-drb/E9La5MRAq86RLi/Y4ku7l4wybZTDbWNq1mQdx/DbLlgf3YbZytw7Fe3p+MgtQQjIc9V63d7UK1Nc+DMk6Q==}
+    peerDependencies:
+      react: '>=17.0.0'
+      react-dom: '>=17.0.0'
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -5468,6 +5477,11 @@ snapshots:
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
+
+  simple-parallax-js@6.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   source-map-js@1.2.1: {}
 
