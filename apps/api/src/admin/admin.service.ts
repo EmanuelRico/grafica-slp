@@ -113,15 +113,18 @@ export class AdminService {
     };
   }
 
-  async bulkDeleteDelivered(): Promise<{ deleted: number; filesDeleted: number; errors: string[] }> {
-    const statuses = [OrderStatus.DELIVERED, OrderStatus.CANCELLED];
+  async bulkDeleteByStatus(status?: string): Promise<{ deleted: number; filesDeleted: number; errors: string[] }> {
+    const statusMap: Record<string, OrderStatus[]> = {
+      delivered: [OrderStatus.DELIVERED],
+      cancelled: [OrderStatus.CANCELLED],
+    };
+    const statuses = statusMap[status] || [OrderStatus.DELIVERED, OrderStatus.CANCELLED];
     const orders = await this.orderModel.find({ status: { $in: statuses } });
     let filesDeleted = 0;
     const errors: string[] = [];
 
     await Promise.all(
       orders.map(async (order) => {
-        // Delete file from R2
         if (order.file?.storageKey) {
           try {
             await this.s3.send(new DeleteObjectCommand({

@@ -55,8 +55,8 @@ export class AdminController {
   }
 
   @Delete('orders/bulk/delivered')
-  async bulkDeleteDelivered() {
-    return this.adminService.bulkDeleteDelivered();
+  async bulkDeleteDelivered(@Query('status') status?: string) {
+    return this.adminService.bulkDeleteByStatus(status);
   }
 
   @Get('storage/stats')
