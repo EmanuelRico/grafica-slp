@@ -222,14 +222,14 @@ GRAFICA SLP`,
                   ...(order.customerEmail ? [['Email', order.customerEmail]] : []),
                   ...(order.wantsInvoice ? [['Factura', 'Sí']] : []),
                   ...(order.invoiceName ? [['Razón social', order.invoiceName]] : []),
-                  ...(order.invoiceCFDI ? [['Uso CFDI', order.invoiceCFDI]] : []),
+                  ...(order.invoiceCFDI ? [['Uso CFDI', { G03: 'G03 - Gastos en general', G01: 'G01 - Adquisición de mercancías' }[order.invoiceCFDI] || order.invoiceCFDI]] : []),
                 ].map(([label, val]) => (
                   <div key={label} className="flex justify-between gap-2">
                     <span className="text-slate-400 shrink-0">{label}</span>
                     {label === 'WhatsApp'
                       ? <a href={`https://wa.me/${val.replace(/\D/g,'')}`} target="_blank" rel="noreferrer"
                           className="font-semibold text-brand-blue hover:underline truncate">{val}</a>
-                      : <span className="font-semibold text-brand-ink truncate">{val}</span>}
+                      : <span className="font-semibold text-brand-ink text-right break-words min-w-0">{val}</span>}
                   </div>
                 ))}
               </div>

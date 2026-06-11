@@ -403,6 +403,7 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-slate-800 text-sm">{order.orderNumber}</span>
                         <span className="text-xs text-slate-400">{order.printType.name}</span>
+                        <span className="text-xs font-medium text-slate-500">{new Date(order.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })} {new Date(order.createdAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</span>
                         {order.wantsInvoice && (
                           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${order.invoicedAt ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
                             {order.invoicedAt ? '✓ Facturado' : '⚠ Factura'}
