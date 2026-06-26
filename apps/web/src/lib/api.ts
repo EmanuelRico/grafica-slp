@@ -174,6 +174,7 @@ export interface TrackedOrder {
   lengthCm: number;
   repetitions: number;
   estimatedPrice: number;
+  file: { originalName: string; mimeType: string; storageKey: string } | null;
   createdAt: string;
   statusHistory: { status: string; changedAt: string }[];
 }

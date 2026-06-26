@@ -96,6 +96,36 @@ function OrderCard({ order, index }: { order: TrackedOrder; index: number }) {
         ))}
       </div>
 
+      {/* Total price */}
+      <div className="flex items-center justify-between bg-brand-blue-pale rounded-xl px-4 py-3">
+        <span className="text-xs font-bold text-brand-blue uppercase tracking-wider">Total estimado</span>
+        <span className="text-lg font-black text-brand-blue">${order.estimatedPrice.toLocaleString('es-MX')}</span>
+      </div>
+
+      {/* File preview */}
+      {order.file && (() => {
+        const base = (import.meta as any).env?.VITE_API_URL || '/api/v1';
+        const previewUrl = `${base}/files/preview/${order.file.storageKey}`;
+        const isImage = order.file.mimeType.startsWith('image/');
+        const isPdf = order.file.mimeType === 'application/pdf';
+        return (
+          <div className="border border-slate-100 rounded-xl overflow-hidden">
+            {isImage ? (
+              <img src={previewUrl} alt={order.file.originalName} className="w-full h-40 object-contain bg-slate-50" />
+            ) : isPdf ? (
+              <iframe src={previewUrl} title={order.file.originalName} className="w-full h-48 bg-slate-50" />
+            ) : (
+              <div className="h-24 bg-slate-50 flex items-center justify-center">
+                <Package size={28} className="text-slate-300" />
+              </div>
+            )}
+            <div className="px-3 py-2 bg-white border-t border-slate-50">
+              <p className="text-[10px] text-slate-400 truncate">{order.file.originalName}</p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* History */}
       {order.statusHistory.length > 0 && (
         <div className="pt-3 border-t border-slate-50">

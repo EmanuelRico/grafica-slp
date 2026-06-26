@@ -114,6 +114,7 @@ export class OrdersService {
       lengthCm: o.lengthCm,
       repetitions: o.repetitions,
       estimatedPrice: o.estimatedPrice,
+      file: o.file ? { originalName: o.file.originalName, mimeType: o.file.mimeType, storageKey: o.file.storageKey } : null,
       createdAt: (o as any).createdAt,
       statusHistory: o.statusHistory.map((h) => ({ status: h.to, changedAt: h.changedAt })),
     }));

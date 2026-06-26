@@ -22,7 +22,15 @@ export class FilesController {
   @Header('Content-Disposition', 'attachment')
   async download(@Param('key') key: string) {
     const { stream, contentType } = await this.filesService.getFileStream(key);
+    stream.on('error', () => { /* client disconnected, ignore */ });
     return new StreamableFile(stream, { type: contentType });
+  }
+
+  @Get('preview/:key(*)')
+  async preview(@Param('key') key: string) {
+    const { stream, contentType } = await this.filesService.getFileStream(key);
+    stream.on('error', () => {});
+    return new StreamableFile(stream, { type: contentType, disposition: 'inline' });
   }
 
   @Post('cleanup')
