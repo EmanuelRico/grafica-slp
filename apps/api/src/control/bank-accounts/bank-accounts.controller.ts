@@ -11,6 +11,7 @@ class CreateBankAccountDto {
   @IsString() bankName: string;
   @IsOptional() @IsString() lastFourDigits?: string;
   @IsString() company: string;
+  @IsOptional() @IsString() type?: string;
 }
 
 class UpdateBankAccountDto {
@@ -18,6 +19,7 @@ class UpdateBankAccountDto {
   @IsOptional() @IsString() bankName?: string;
   @IsOptional() @IsString() lastFourDigits?: string;
   @IsOptional() @IsString() company?: string;
+  @IsOptional() @IsString() type?: string;
 }
 
 @Controller('control/bank-accounts')

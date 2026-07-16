@@ -435,21 +435,21 @@ export default function ControlDashboard() {
                       <span className={`text-[10px] sm:text-sm font-semibold ${isToday ? 'text-brand-blue' : 'text-slate-700'}`}>{day}</span>
                       {dayPayments.length > 0 && (
                         <>
-                          {/* Desktop: show labels with category color */}
+                          {/* Desktop: show labels with company color */}
                           <div className="hidden sm:block mt-1.5 space-y-0.5">
                             {dayPayments.slice(0, 2).map((p: any, i: number) => (
                               <div key={i} className="text-[10px] font-medium truncate px-1.5 py-0.5 rounded flex items-center gap-1"
-                                style={{ backgroundColor: `${p.category?.color || '#F59E0B'}15`, color: p.category?.color || '#F59E0B' }}>
-                                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.category?.color || '#F59E0B' }} />
-                                {p.concept?.name}
+                                style={{ backgroundColor: `${p.company?.color || '#F59E0B'}15`, color: p.company?.color || '#F59E0B' }}>
+                                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.company?.color || '#F59E0B' }} />
+                                {p.company?.shortName || p.concept?.name}
                               </div>
                             ))}
                             {dayPayments.length > 2 && <span className="text-[10px] text-slate-400 px-1">+{dayPayments.length - 2}</span>}
                           </div>
-                          {/* Mobile: show dots with category color */}
+                          {/* Mobile: show dots with company color */}
                           <div className="sm:hidden flex gap-0.5 mt-1 justify-center">
                             {dayPayments.slice(0, 3).map((p: any, i: number) => (
-                              <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: p.category?.color || '#F59E0B' }} />
+                              <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: p.company?.color || '#F59E0B' }} />
                             ))}
                           </div>
                         </>
@@ -460,7 +460,7 @@ export default function ControlDashboard() {
               </div>
               {/* Legend */}
               <div className="flex items-center gap-3 sm:gap-5 mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex-wrap">
-                <span className="text-[10px] sm:text-xs text-slate-400 font-medium">Colores por categoría</span>
+                <span className="text-[10px] sm:text-xs text-slate-400 font-medium">Colores por empresa</span>
                 <div className="flex items-center gap-1.5 sm:gap-2"><div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-brand-blue" /><span className="text-[10px] sm:text-xs text-slate-500 font-medium">Hoy</span></div>
               </div>
             </div>

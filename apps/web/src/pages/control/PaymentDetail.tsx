@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, CheckCircle, XCircle, PencilSimple, Clock, Receipt, FileText,
-  CalendarCheck, Buildings, Tag, CurrencyDollar, Repeat, User, Bank, X,
+  CalendarCheck, Buildings, Tag, CurrencyDollar, Repeat, User, Bank, X, Trash,
 } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
@@ -56,7 +56,14 @@ export default function PaymentDetail() {
   const [loading, setLoading] = useState(true);
   const [showPaidModal, setShowPaidModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  const [editMode, setEditMode] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Edit form
+  const [editAmount, setEditAmount] = useState('');
+  const [editDueDate, setEditDueDate] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
 
   // Mark as paid form
   const [paidAt, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
@@ -90,7 +97,7 @@ export default function PaymentDetail() {
     if (!id) return;
     setSubmitting(true);
     try {
-      await (api as any).control.payments.markPaid(id, { paidAt, bankAccount: bankAccountId || undefined, paymentNotes: paidNotes || undefined });
+      await (api as any).control.payments.markPaid(id, { paidAt });
       toast.success('Pago marcado como pagado');
       setShowPaidModal(false);
       fetchPayment();
@@ -98,6 +105,43 @@ export default function PaymentDetail() {
       toast.error(e.message || 'Error al marcar como pagado');
     }
     setSubmitting(false);
+  };
+
+  const openEditModal = () => {
+    if (!payment) return;
+    setEditAmount(String(payment.amount || ''));
+    setEditDueDate(payment.dueDate ? new Date(payment.dueDate).toISOString().slice(0, 10) : '');
+    setEditNotes(payment.paymentNotes || payment.notes || '');
+    setShowEditModal(true);
+  };
+
+  const handleEdit = async () => {
+    if (!id) return;
+    setEditSaving(true);
+    try {
+      const data: any = {};
+      if (editAmount) data.amount = Number(editAmount);
+      if (editDueDate) data.dueDate = editDueDate;
+      if (editNotes !== undefined) data.paymentNotes = editNotes;
+      await (api as any).control.payments.update(id, data);
+      toast.success('Pago actualizado');
+      setShowEditModal(false);
+      fetchPayment();
+    } catch (e: any) {
+      toast.error(e.message || 'Error al actualizar el pago');
+    }
+    setEditSaving(false);
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await (api as any).control.payments.delete(id);
+      toast.success('Pago eliminado');
+      navigate('/control/pagos');
+    } catch (e: any) {
+      toast.error(e.message || 'Error al eliminar el pago');
+    }
   };
 
   const handleCancel = async () => {
@@ -166,11 +210,18 @@ export default function PaymentDetail() {
             </>
           )}
           <button
-            onClick={() => setEditMode(!editMode)}
-            className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all ease-out active:scale-[0.97] ${editMode ? 'bg-brand-blue text-white border-brand-blue' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+            onClick={openEditModal}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-all ease-out active:scale-[0.97]"
           >
             <PencilSimple size={16} />
-            {editMode ? 'Editando' : 'Editar'}
+            Editar
+          </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 text-sm font-medium transition-all ease-out active:scale-[0.97]"
+          >
+            <Trash size={16} />
+            Eliminar
           </button>
         </div>
       </div>
@@ -275,69 +326,36 @@ export default function PaymentDetail() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(13,27,42,0.5)', backdropFilter: 'blur(4px)' }}
             onClick={() => setShowPaidModal(false)}
           >
             <motion.div
-              {...scaleIn}
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-md p-6"
+              className="bg-white rounded-2xl shadow-soft-2xl max-w-xs w-full p-6"
             >
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-bold text-slate-900">Marcar como Pagado</h3>
-                <button onClick={() => setShowPaidModal(false)} className="p-1 rounded-lg hover:bg-slate-100 transition-colors">
-                  <X size={18} className="text-slate-500" />
-                </button>
+              <div className="w-11 h-11 bg-green-50 rounded-xl flex items-center justify-center mb-4">
+                <CheckCircle size={22} weight="duotone" className="text-green-600" />
               </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Fecha de pago</label>
-                  <input
-                    type="date"
-                    value={paidAt}
-                    onChange={e => setPaidAt(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Cuenta bancaria</label>
-                  <select
-                    value={bankAccountId}
-                    onChange={e => setBankAccountId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none transition-all"
-                  >
-                    <option value="">Seleccionar cuenta...</option>
-                    {bankAccounts.map((ba: any) => (
-                      <option key={ba._id} value={ba._id}>{ba.name} - {ba.bankName} (****{ba.lastFourDigits})</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Notas (opcional)</label>
-                  <textarea
-                    value={paidNotes}
-                    onChange={e => setPaidNotes(e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none transition-all resize-none"
-                    placeholder="Referencia, número de transferencia..."
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 mt-6">
-                <button
-                  onClick={() => setShowPaidModal(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.97]"
-                >
+              <h3 className="text-lg font-bold text-slate-900 mb-1">Marcar como pagado</h3>
+              <p className="text-sm text-slate-500 mb-4">Selecciona la fecha de pago</p>
+              <input
+                type="date"
+                value={paidAt}
+                onChange={e => setPaidAt(e.target.value)}
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-colors mb-4"
+              />
+              <div className="flex gap-3">
+                <button onClick={() => setShowPaidModal(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
                   Cancelar
                 </button>
-                <button
-                  onClick={handleMarkPaid}
-                  disabled={submitting || !paidAt}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-all active:scale-[0.97]"
-                >
-                  {submitting ? 'Guardando...' : 'Confirmar Pago'}
+                <button onClick={handleMarkPaid} disabled={submitting}
+                  className="flex-1 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors text-sm disabled:opacity-60 active:scale-[0.97]">
+                  {submitting ? 'Guardando...' : 'Confirmar'}
                 </button>
               </div>
             </motion.div>
@@ -376,6 +394,113 @@ export default function PaymentDetail() {
                   className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-all active:scale-[0.97]"
                 >
                   {submitting ? 'Cancelando...' : 'Sí, cancelar'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit modal */}
+      <AnimatePresence>
+        {showEditModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(13,27,42,0.5)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowEditModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-soft-2xl max-w-sm w-full p-6"
+            >
+              <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                <PencilSimple size={22} weight="duotone" className="text-brand-blue" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Editar pago</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Monto</label>
+                  <input
+                    type="number"
+                    value={editAmount}
+                    onChange={e => setEditAmount(e.target.value)}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Fecha límite</label>
+                  <input
+                    type="date"
+                    value={editDueDate}
+                    onChange={e => setEditDueDate(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Notas</label>
+                  <textarea
+                    value={editNotes}
+                    onChange={e => setEditNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Notas opcionales..."
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-colors resize-none"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setShowEditModal(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                  Cancelar
+                </button>
+                <button onClick={handleEdit} disabled={editSaving}
+                  className="flex-1 py-2.5 bg-brand-blue text-white font-bold rounded-xl hover:opacity-90 transition-colors text-sm disabled:opacity-60 active:scale-[0.97]">
+                  {editSaving ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirmation modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(13,27,42,0.5)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-soft-2xl max-w-xs w-full p-6"
+            >
+              <div className="w-11 h-11 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+                <Trash size={22} weight="duotone" className="text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">Eliminar pago</h3>
+              <p className="text-sm text-slate-500 mb-4">¿Estás seguro? Esta acción no se puede deshacer.</p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                  Cancelar
+                </button>
+                <button onClick={handleDelete}
+                  className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors text-sm active:scale-[0.97]">
+                  Eliminar
                 </button>
               </div>
             </motion.div>

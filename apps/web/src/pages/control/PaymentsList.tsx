@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { MagnifyingGlass, Funnel, CaretLeft, CaretRight, Receipt, Plus } from '@phosphor-icons/react';
+import { MagnifyingGlass, Funnel, CaretLeft, CaretRight, Receipt, Plus, CheckCircle } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
 import { staggerContainer, staggerItem, fadeUp } from '../../components/animations/variants';
@@ -77,6 +77,11 @@ export default function PaymentsList() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
+  // Quick pay modal
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const [payingDate, setPayingDate] = useState(new Date().toISOString().split('T')[0]);
+  const [payingLoading, setPayingLoading] = useState(false);
+
   useEffect(() => {
     document.title = 'Pagos — Control de Gastos';
     Promise.all([
@@ -94,8 +99,8 @@ export default function PaymentsList() {
       const params: Record<string, string> = { page: String(page), limit: String(limit) };
       if (search) params.search = search;
       if (status) params.status = status;
-      if (companyId) params.companyId = companyId;
-      if (categoryId) params.categoryId = categoryId;
+      if (companyId) params.company = companyId;
+      if (categoryId) params.category = categoryId;
       if (periodMonth) params.periodMonth = periodMonth;
       if (periodYear) params.periodYear = periodYear;
 
@@ -109,6 +114,22 @@ export default function PaymentsList() {
   }, [page, limit, search, status, companyId, categoryId, periodMonth, periodYear]);
 
   useEffect(() => { fetchPayments(); }, [fetchPayments]);
+
+  // Quick mark as paid
+  const handleQuickPay = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!payingId) return;
+    setPayingLoading(true);
+    try {
+      await (api as any).control.payments.markPaid(payingId, { paidAt: payingDate });
+      toast.success('Pago marcado como pagado');
+      setPayingId(null);
+      fetchPayments();
+    } catch (err: any) {
+      toast.error(err.message || 'Error al marcar como pagado');
+    }
+    setPayingLoading(false);
+  };
 
   const totalPages = Math.ceil(total / limit) || 1;
   const currentYear = new Date().getFullYear();
@@ -231,6 +252,7 @@ export default function PaymentsList() {
                     <th className="text-left px-4 py-3 font-semibold text-slate-600">Vencimiento</th>
                     <th className="text-center px-4 py-3 font-semibold text-slate-600">Estado</th>
                     <th className="text-right px-4 py-3 font-semibold text-slate-600">Días</th>
+                    <th className="text-center px-4 py-3 font-semibold text-slate-600"></th>
                   </tr>
                 </thead>
                 <motion.tbody variants={staggerContainer} initial="initial" animate="animate">
@@ -248,8 +270,9 @@ export default function PaymentsList() {
                           <p className="text-xs text-slate-400">{MONTHS[(p.periodMonth || 1) - 1]} {p.periodYear}</p>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="inline-flex px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
-                            {p.companyShortName || p.company?.shortName || '—'}
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium border border-slate-100">
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.company?.color || '#01AEF0' }} />
+                            <span style={{ color: p.company?.color || '#01AEF0' }}>{p.companyShortName || p.company?.shortName || '—'}</span>
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-slate-800">{formatCurrency(p.amount)}</td>
@@ -262,6 +285,17 @@ export default function PaymentsList() {
                           </span>
                         </td>
                         <td className={`px-4 py-3 text-right text-xs ${days.className}`}>{p.status !== 'paid' && p.status !== 'cancelled' ? days.text : '—'}</td>
+                        <td className="px-4 py-3 text-center">
+                          {p.status !== 'paid' && p.status !== 'cancelled' && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setPayingId(p._id); setPayingDate(new Date().toISOString().split('T')[0]); }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-lg border border-green-200 hover:bg-green-100 transition-all duration-150 active:scale-[0.95]"
+                            >
+                              <CheckCircle size={12} weight="bold" />
+                              Pagar
+                            </button>
+                          )}
+                        </td>
                       </motion.tr>
                     );
                   })}
@@ -283,7 +317,11 @@ export default function PaymentsList() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-slate-800 truncate">{p.conceptName || p.concept?.name || '—'}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{p.companyShortName || p.company?.shortName} · {MONTHS[(p.periodMonth || 1) - 1]} {p.periodYear}</p>
+                        <p className="text-xs mt-0.5 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.company?.color || '#01AEF0' }} />
+                          <span style={{ color: p.company?.color || '#01AEF0' }}>{p.companyShortName || p.company?.shortName}</span>
+                          <span className="text-slate-400">· {MONTHS[(p.periodMonth || 1) - 1]} {p.periodYear}</span>
+                        </p>
                       </div>
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold border ${statusColor(p.displayStatus || p.status)}`}>
                         {statusLabel(p.displayStatus || p.status)}
@@ -291,7 +329,17 @@ export default function PaymentsList() {
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <span className="font-semibold text-slate-800">{formatCurrency(p.amount)}</span>
-                      <span className={`text-xs ${days.className}`}>{p.status !== 'paid' && p.status !== 'cancelled' ? days.text : ''}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs ${days.className}`}>{p.status !== 'paid' && p.status !== 'cancelled' ? days.text : ''}</span>
+                        {p.status !== 'paid' && p.status !== 'cancelled' && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setPayingId(p._id); setPayingDate(new Date().toISOString().split('T')[0]); }}
+                            className="flex-shrink-0 p-1.5 bg-green-50 text-green-700 rounded-lg border border-green-200 active:scale-[0.95]"
+                          >
+                            <CheckCircle size={14} weight="bold" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 );
@@ -325,6 +373,47 @@ export default function PaymentsList() {
           </div>
         </div>
       )}
+      {/* Quick pay modal */}
+      <AnimatePresence>
+        {payingId && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(13,27,42,0.5)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setPayingId(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-xl max-w-xs w-full p-6"
+            >
+              <div className="w-11 h-11 bg-green-50 rounded-xl flex items-center justify-center mb-4">
+                <CheckCircle size={22} weight="duotone" className="text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">Marcar como pagado</h3>
+              <p className="text-sm text-slate-500 mb-4">Selecciona la fecha de pago</p>
+              <input
+                type="date"
+                value={payingDate}
+                onChange={e => setPayingDate(e.target.value)}
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-colors mb-4"
+              />
+              <div className="flex gap-3">
+                <button onClick={() => setPayingId(null)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                  Cancelar
+                </button>
+                <button onClick={handleQuickPay} disabled={payingLoading}
+                  className="flex-1 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors text-sm disabled:opacity-60 active:scale-[0.97]">
+                  {payingLoading ? 'Guardando...' : 'Confirmar'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

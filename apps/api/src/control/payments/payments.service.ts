@@ -177,6 +177,24 @@ export class PaymentsService {
     return payment.populate(this.populateFields());
   }
 
+  async delete(id: string) {
+    const payment = await this.paymentModel.findById(id);
+    if (!payment) throw new NotFoundException('Pago no encontrado');
+
+    // Delete receipts from R2
+    for (const receipt of payment.receipts || []) {
+      try {
+        await this.s3.send(new DeleteObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME || 'graficaslp-files',
+          Key: receipt.storageKey,
+        }));
+      } catch {}
+    }
+
+    await this.paymentModel.findByIdAndDelete(id);
+    return { deleted: true };
+  }
+
   private async generateNextRecurring(payment: PaymentDocument, changedBy: string) {
     const monthsToAdd: Record<string, number> = {
       [Recurrence.MONTHLY]: 1,
@@ -218,7 +236,8 @@ export class PaymentsService {
       provider: payment.provider,
       periodMonth: nextMonth,
       periodYear: nextYear,
-      amount: payment.amount,
+      amount: payment.fixedAmount ? payment.amount : 0,
+      fixedAmount: payment.fixedAmount,
       dueDate: nextDueDate,
       recurrence: payment.recurrence,
       history: [{ action: 'created', changedBy, changedAt: new Date() }],

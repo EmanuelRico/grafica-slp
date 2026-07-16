@@ -166,6 +166,7 @@ export default function Configuration() {
   };
 
   return (
+    <div className="h-full overflow-y-auto">
     <motion.div {...fadeUp} className="space-y-6">
       {/* Header */}
       <div>
@@ -450,5 +451,6 @@ export default function Configuration() {
         )}
       </AnimatePresence>
     </motion.div>
+    </div>
   );
 }
