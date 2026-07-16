@@ -68,7 +68,7 @@ export default function BankAccounts() {
     }
     setSubmitting(true);
     try {
-      const data = { name: formName, bankName: formBankName, lastFourDigits: formLastFour, companyId: formCompanyId };
+      const data = { name: formName, bankName: formBankName, lastFourDigits: formLastFour, company: formCompanyId };
       if (editing) {
         await (api as any).control.bankAccounts.update(editing._id, data);
         toast.success('Cuenta actualizada');

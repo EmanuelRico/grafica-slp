@@ -68,16 +68,16 @@ export default function NewPayment() {
     setSubmitting(true);
     try {
       await (api as any).control.payments.create({
-        companyId,
-        conceptId,
-        categoryId,
-        providerId: providerId || undefined,
+        company: companyId,
+        concept: conceptId,
+        category: categoryId,
+        provider: providerId || undefined,
         periodMonth: Number(periodMonth),
         periodYear: Number(periodYear),
         amount: Number(amount),
         dueDate,
         recurrence,
-        notes: notes || undefined,
+        paymentNotes: notes || undefined,
       });
       toast.success('Pago creado exitosamente');
       navigate('/control/pagos');
