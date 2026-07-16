@@ -101,6 +101,7 @@ export default function NewPayment() {
   }
 
   return (
+    <div className="h-full overflow-y-auto pb-8">
     <motion.div {...fadeUp} className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div>
@@ -305,5 +306,6 @@ export default function NewPayment() {
         </div>
       </form>
     </motion.div>
+    </div>
   );
 }
