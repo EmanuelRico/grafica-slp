@@ -7,9 +7,10 @@ interface Data { printTypeSlug: string; lengthCm: number; repetitions: number; c
 interface Props { initial: Data; onComplete: (data: Data) => void; }
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-  dtf_uv:      { bg: 'bg-blue-50',   border: 'border-brand-blue',   text: 'text-brand-blue',   dot: 'bg-brand-blue' },
-  dtf_textile: { bg: 'bg-sky-50',    border: 'border-sky-400',      text: 'text-sky-600',      dot: 'bg-sky-400' },
-  sublimation: { bg: 'bg-orange-50', border: 'border-orange-400',   text: 'text-orange-600',   dot: 'bg-orange-400' },
+  dtf_uv:            { bg: 'bg-blue-50',   border: 'border-brand-blue',   text: 'text-brand-blue',   dot: 'bg-brand-blue' },
+  dtf_textile:       { bg: 'bg-sky-50',    border: 'border-sky-400',      text: 'text-sky-600',      dot: 'bg-sky-400' },
+  sublimation:       { bg: 'bg-orange-50', border: 'border-orange-400',   text: 'text-orange-600',   dot: 'bg-orange-400' },
+  sublimation_sheet: { bg: 'bg-amber-50',  border: 'border-amber-400',    text: 'text-amber-600',    dot: 'bg-amber-400' },
 };
 
 export default function Step3Details({ initial, onComplete }: Props) {
@@ -20,14 +21,19 @@ export default function Step3Details({ initial, onComplete }: Props) {
   useEffect(() => { api.getPrintTypes().then(setPrintTypes).catch(() => {}); }, []);
 
   const selected = printTypes.find((p) => p.slug === data.printTypeSlug);
-  const estimatedPrice = selected ? (data.lengthCm / 100) * data.repetitions * selected.pricePerMeter : 0;
+  const isPerUnit = selected?.pricingType === 'per_unit';
+  const estimatedPrice = selected
+    ? isPerUnit
+      ? data.lengthCm * data.repetitions * selected.pricePerMeter
+      : (data.lengthCm / 100) * data.repetitions * selected.pricePerMeter
+    : 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const err: Record<string, string> = {};
     if (!data.printTypeSlug) err.printTypeSlug = 'Selecciona un tipo';
-    if (!data.lengthCm || data.lengthCm <= 0) err.lengthCm = 'Ingresa la longitud';
-    if (selected && data.lengthCm < selected.minLengthCm)
+    if (!data.lengthCm || data.lengthCm <= 0) err.lengthCm = isPerUnit ? 'Ingresa la cantidad' : 'Ingresa la longitud';
+    if (!isPerUnit && selected && data.lengthCm < selected.minLengthCm)
       err.lengthCm = `Mínimo ${selected.minLengthCm} cm para ${selected.name}`;
     if (!data.repetitions || data.repetitions < 1) err.repetitions = 'Mínimo 1';
     if (Object.keys(err).length) { setErrors(err); return; }
@@ -60,11 +66,11 @@ export default function Step3Details({ initial, onComplete }: Props) {
             >
               <div className={`w-2 h-2 rounded-full mb-3 ${isSelected ? c.dot : 'bg-slate-300'}`} />
               <p className={`font-bold text-sm ${isSelected ? c.text : 'text-brand-ink'}`}>{pt.name}</p>
-              <p className="text-xs text-slate-400 mt-1">{pt.widthCm} cm ancho</p>
+              <p className="text-xs text-slate-400 mt-1">{pt.pricingType === 'per_unit' ? 'Por hoja' : `${pt.widthCm} cm ancho`}</p>
               <p className={`text-sm font-black mt-2 ${isSelected ? c.text : 'text-slate-600'}`}>
-                ${pt.pricePerMeter}<span className="text-xs font-normal"> /metro</span>
+                ${pt.pricePerMeter}<span className="text-xs font-normal"> {pt.pricingType === 'per_unit' ? '/hoja' : '/metro'}</span>
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">Mínimo {pt.minLengthCm} cm</p>
+              <p className="text-xs text-slate-400 mt-0.5">{pt.pricingType === 'per_unit' ? `Mínimo ${pt.minLengthCm} hoja` : `Mínimo ${pt.minLengthCm} cm`}</p>
             </motion.button>
           );
         })}
@@ -75,14 +81,14 @@ export default function Step3Details({ initial, onComplete }: Props) {
       <div className="grid grid-cols-2 gap-4 mt-6">
         <div>
           <label className="text-sm font-semibold text-brand-ink block mb-1.5">
-            Largo requerido (cm) <span className="text-red-400">*</span>
+            {isPerUnit ? 'Cantidad de hojas' : 'Largo requerido (cm)'} <span className="text-red-400">*</span>
           </label>
           <div className="relative">
-            <input type="number" min={selected?.minLengthCm || 1} step="0.5"
+            <input type="number" min={isPerUnit ? 1 : (selected?.minLengthCm || 1)} step={isPerUnit ? 1 : 0.5}
               className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all text-brand-ink font-medium text-sm"
-              value={data.lengthCm || ''} placeholder={selected ? `Mín. ${selected.minLengthCm}` : '0'}
+              value={data.lengthCm || ''} placeholder={isPerUnit ? '1' : (selected ? `Mín. ${selected.minLengthCm}` : '0')}
               onBlur={(e) => {
-                if (selected && +e.target.value < selected.minLengthCm) {
+                if (!isPerUnit && selected && +e.target.value < selected.minLengthCm) {
                   setData(d => ({ ...d, lengthCm: selected.minLengthCm }));
                   setErrors(err => ({ ...err, lengthCm: `Mínimo ${selected.minLengthCm} cm para ${selected.name}` }));
                 }
@@ -91,7 +97,7 @@ export default function Step3Details({ initial, onComplete }: Props) {
                 setData(d => ({ ...d, lengthCm: +e.target.value }));
                 setErrors(err => { const n = { ...err }; delete n.lengthCm; return n; });
               }} />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium">cm</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium">{isPerUnit ? 'hojas' : 'cm'}</span>
           </div>
           {errors.lengthCm && <p className="text-red-500 text-xs mt-1">{errors.lengthCm}</p>}
         </div>
@@ -123,7 +129,9 @@ export default function Step3Details({ initial, onComplete }: Props) {
                 <span className="text-sm font-normal text-brand-slate ml-1">MXN</span>
               </motion.p>
               <p className="text-xs text-slate-400 mt-0.5">
-                {data.lengthCm}cm × {data.repetitions} rep × ${selected?.pricePerMeter}/m
+                {isPerUnit
+                  ? `${data.lengthCm} hojas × ${data.repetitions} rep × $${selected?.pricePerMeter}/hoja`
+                  : `${data.lengthCm}cm × ${data.repetitions} rep × $${selected?.pricePerMeter}/m`}
               </p>
             </div>
             <Calculator size={28} className="text-brand-blue/30" weight="light" />

@@ -382,7 +382,7 @@ export default function AdminDashboard() {
                 const getWaUrl = () => {
                   const phone = order.customerPhone.replace(/\D/g, '');
                   const msgs: Record<string, string> = {
-                    received: `✨ Pedido recibido\n\n¡Tu archivo ya está en nuestras manos!\n\n🧾 Pedido: #${order.orderNumber}\n\nHemos recibido tu archivo correctamente y comenzaremos a procesarlo.\n\nTe notificaremos nuevamente cuando esté listo.\n\nGRAFICA SLP`,
+                    received: `✨ Pedido recibido\n\n¡Tu archivo ya está en nuestras manos!\n\n🧾 Pedido: #${order.orderNumber}\n\n📋 *Detalles del pedido:*\n🖨️ Tipo: ${order.printType?.name}\n📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.\n💰 Precio estimado: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nHemos recibido tu archivo correctamente y comenzaremos a procesarlo.\n\nTe notificaremos nuevamente cuando esté listo.\n\nGRAFICA SLP`,
                     finished: `🎉 ¡Tu pedido está listo!\n\nHola ${order.customerName}, te informamos que tu pedido ya fue terminado.\n\n📋 *Detalles del pedido:*\n🧾 Folio: *#${order.orderNumber}*\n🖨️ Tipo: ${order.printType?.name || 'N/A'}\n📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.\n💰 Precio estimado: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nPuedes pasar a recogerlo cuando gustes dentro de nuestro horario de atención.\n\nGracias por crear con nosotros 💙\n\nGRAFICA SLP`,
                     cancelled: `❌ Pedido cancelado\n\nHola, te informamos que tu pedido #${order.orderNumber} ha sido cancelado.\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nGRAFICA SLP`,
                   };

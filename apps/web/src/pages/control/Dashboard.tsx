@@ -42,7 +42,7 @@ export default function ControlDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [companyStats, setCompanyStats] = useState<any[]>([]);
   const [attentionPayments, setAttentionPayments] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'overdue' | 'today' | 'week' | 'upcoming' | 'paid'>('overdue');
+  const [activeTab, setActiveTab] = useState<'overdue' | 'today' | 'week' | 'upcoming' | 'paid'>('today');
   const [loading, setLoading] = useState(true);
 
   // Mark as paid quick modal
@@ -80,10 +80,6 @@ export default function ControlDashboard() {
 
   useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
 
-  useEffect(() => {
-    api.control.dashboard.attention(activeTab).then(setAttentionPayments).catch(() => {});
-  }, [activeTab]);
-
   // Calendar data
   useEffect(() => {
     if (viewTab === 'calendario') {
@@ -112,10 +108,10 @@ export default function ControlDashboard() {
   };
 
   const kpiCards = [
-    { label: 'Pagos vencidos', count: stats?.overdue?.count || 0, total: stats?.overdue?.total || 0, icon: Warning, iconBg: 'bg-red-50', iconColor: 'text-red-500', borderColor: 'border-red-100' },
-    { label: 'Vencen hoy', count: stats?.dueToday?.count || 0, total: stats?.dueToday?.total || 0, icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-500', borderColor: 'border-amber-100' },
-    { label: 'Vencen esta semana', count: stats?.dueThisWeek?.count || 0, total: stats?.dueThisWeek?.total || 0, icon: CalendarCheck, iconBg: 'bg-purple-50', iconColor: 'text-purple-500', borderColor: 'border-purple-100' },
-    { label: 'Total pendiente del mes', count: stats?.totalPendingMonth?.count || 0, total: stats?.totalPendingMonth?.total || 0, icon: CurrencyCircleDollar, iconBg: 'bg-green-50', iconColor: 'text-green-600', borderColor: 'border-green-100', highlight: true },
+    { label: 'Pagos vencidos', tab: 'overdue' as const, count: stats?.overdue?.count || 0, total: stats?.overdue?.total || 0, icon: Warning, iconBg: 'bg-red-50', iconColor: 'text-red-500', borderColor: 'border-red-100' },
+    { label: 'Vencen hoy', tab: 'today' as const, count: stats?.dueToday?.count || 0, total: stats?.dueToday?.total || 0, icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-500', borderColor: 'border-amber-100' },
+    { label: 'Vencen esta semana', tab: 'week' as const, count: stats?.dueThisWeek?.count || 0, total: stats?.dueThisWeek?.total || 0, icon: CalendarCheck, iconBg: 'bg-purple-50', iconColor: 'text-purple-500', borderColor: 'border-purple-100' },
+    { label: 'Próximos', tab: 'upcoming' as const, count: stats?.upcoming?.count || 0, total: stats?.upcoming?.total || 0, icon: CurrencyCircleDollar, iconBg: 'bg-green-50', iconColor: 'text-green-600', borderColor: 'border-green-100' },
   ];
 
   // Calendar helpers
@@ -177,7 +173,8 @@ export default function ControlDashboard() {
                 <motion.div
                   key={card.label}
                   {...staggerItem}
-                  className={`bg-white rounded-xl sm:rounded-2xl border ${card.borderColor} p-3 sm:p-5 hover:shadow-md transition-shadow duration-200 ${card.highlight ? 'ring-1 ring-green-200' : ''}`}
+                  onClick={() => setActiveTab(activeTab === card.tab ? 'today' : card.tab)}
+                  className={`bg-white rounded-xl sm:rounded-2xl border ${card.borderColor} p-3 sm:p-5 hover:shadow-md transition-all duration-200 cursor-pointer ${activeTab === card.tab ? 'ring-2 ring-brand-blue shadow-md' : ''}`}
                 >
                   <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                     <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl ${card.iconBg} flex items-center justify-center`}>
@@ -200,10 +197,14 @@ export default function ControlDashboard() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {companyStats.map((company) => {
-                    const status = company.overdueCount > 0 ? 'Atención requerida' : company.pendingCount > 0 ? 'Pendiente' : 'Todo al corriente';
-                    const statusColor = company.overdueCount > 0 ? 'bg-red-50 text-red-600 border-red-200' : company.pendingCount > 0 ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-green-50 text-green-600 border-green-200';
+                    const status = company.overdueCount > 0 ? 'Atención requerida' : company.dueTodayCount > 0 ? 'Vence hoy' : 'Todo al corriente';
+                    const statusColor = company.overdueCount > 0 ? 'bg-red-50 text-red-600 border-red-200' : company.dueTodayCount > 0 ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : 'bg-green-50 text-green-600 border-green-200';
                     return (
-                      <motion.div key={company._id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-slate-100 p-5 hover:shadow-md transition-all duration-200" style={{ borderTopColor: company.color || '#01AEF0', borderTopWidth: '3px' }}>
+                      <motion.div key={company._id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        onClick={() => navigate(`/control/pagos?company=${company._id}`)}
+                        className="bg-white rounded-2xl border border-slate-100 p-5 hover:shadow-md transition-all duration-200 cursor-pointer"
+                        style={{ borderTopColor: company.color || '#01AEF0', borderTopWidth: '3px' }}
+                      >
                         <div className="flex items-center gap-3 mb-3">
                           <div className="w-12 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${company.color || '#01AEF0'}15` }}>
                             <span className="font-black text-xs" style={{ color: company.color || '#01AEF0' }}>{company.shortName || company.name?.slice(0, 4)}</span>
@@ -227,9 +228,6 @@ export default function ControlDashboard() {
                             <p className="text-[10px] text-slate-500">Vencidos</p>
                           </div>
                         </div>
-                        <button onClick={() => navigate(`/control/pagos?company=${company._id}`)} className="w-full flex items-center justify-center gap-1 text-sm font-medium text-slate-500 hover:text-brand-blue py-2 border-t border-slate-100 transition-colors active:scale-[0.97]">
-                          Ver empresa <ArrowRight size={14} />
-                        </button>
                       </motion.div>
                     );
                   })}

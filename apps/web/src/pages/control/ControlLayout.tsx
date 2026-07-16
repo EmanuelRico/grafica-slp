@@ -163,7 +163,7 @@ export default function ControlLayout() {
         </header>
 
         {/* Page content */}
-        <div className="flex-1 pt-4 md:pt-6 lg:pt-8 px-4 md:px-6 lg:px-8 overflow-hidden">
+        <div className="flex-1 pt-4 md:pt-6 lg:pt-8 px-4 md:px-6 lg:px-8 overflow-y-auto">
           <Outlet />
         </div>
       </main>

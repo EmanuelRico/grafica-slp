@@ -73,6 +73,37 @@ export class AdminService {
     return doc;
   }
 
+  async updateOrderDetails(id: string, data: { lengthCm?: number; repetitions?: number; estimatedPrice?: number }, changedBy: string): Promise<OrderDocument> {
+    const order = await this.orderModel.findById(id);
+    if (!order) throw new NotFoundException('Order not found');
+
+    const changes: string[] = [];
+    if (data.lengthCm !== undefined && data.lengthCm !== order.lengthCm) {
+      changes.push(`Longitud: ${order.lengthCm}cm → ${data.lengthCm}cm`);
+      order.lengthCm = data.lengthCm;
+    }
+    if (data.repetitions !== undefined && data.repetitions !== order.repetitions) {
+      changes.push(`Repeticiones: ${order.repetitions} → ${data.repetitions}`);
+      order.repetitions = data.repetitions;
+    }
+    if (data.estimatedPrice !== undefined && data.estimatedPrice !== order.estimatedPrice) {
+      changes.push(`Precio: $${order.estimatedPrice} → $${data.estimatedPrice}`);
+      order.estimatedPrice = data.estimatedPrice;
+    }
+
+    if (changes.length > 0) {
+      order.statusHistory.push({
+        from: order.status,
+        to: order.status,
+        changedBy,
+        note: `Detalles actualizados: ${changes.join(', ')}`,
+        changedAt: new Date(),
+      });
+    }
+
+    return order.save();
+  }
+
   async getWhatsAppMessage(id: string): Promise<string> {
     const order = await this.getOrder(id);
     const statusLabels: Record<string, string> = {

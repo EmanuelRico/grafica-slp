@@ -60,10 +60,10 @@ export class PaymentsController {
   }
 
   @Get('dashboard/attention')
-  async getAttentionPayments(@Query('tab') tab?: string, @Query('limit') limit?: string) {
+  async getAttentionPayments(@Query('tab') tab?: string, @Query('limit') limit?: string, @Query('company') company?: string) {
     const validTabs = ['overdue', 'today', 'week', 'upcoming', 'paid'] as const;
     const selectedTab = validTabs.includes(tab as any) ? (tab as any) : 'overdue';
-    return this.paymentsService.getAttentionPayments(selectedTab, limit ? +limit : 10);
+    return this.paymentsService.getAttentionPayments(selectedTab, limit ? +limit : 10, company);
   }
 
   // Calendar

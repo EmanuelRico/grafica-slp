@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MagnifyingGlass, Funnel, CaretLeft, CaretRight, Receipt, Plus, CheckCircle } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 import { useToast } from '../../components/ui/Toast';
@@ -57,6 +57,7 @@ function daysRemaining(dueDate: string) {
 
 export default function PaymentsList() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
 
   const [payments, setPayments] = useState<any[]>([]);
@@ -65,10 +66,10 @@ export default function PaymentsList() {
   const [limit] = useState(20);
   const [loading, setLoading] = useState(true);
 
-  // Filters
+  // Filters - initialize from URL params
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
-  const [companyId, setCompanyId] = useState('');
+  const [companyId, setCompanyId] = useState(searchParams.get('company') || '');
   const [categoryId, setCategoryId] = useState('');
   const [periodMonth, setPeriodMonth] = useState<string>('');
   const [periodYear, setPeriodYear] = useState<string>(String(new Date().getFullYear()));

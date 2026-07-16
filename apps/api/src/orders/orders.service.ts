@@ -44,7 +44,9 @@ export class OrdersService {
       throw new BadRequestException('All acknowledgements are required');
     }
 
-    const estimatedPrice = ((dto.lengthCm / 100) * dto.repetitions * printType.pricePerMeter);
+    const estimatedPrice = printType.pricingType === 'per_unit'
+      ? dto.lengthCm * dto.repetitions * printType.pricePerMeter
+      : ((dto.lengthCm / 100) * dto.repetitions * printType.pricePerMeter);
     const orderNumber = await this.generateOrderNumber();
 
     const order = new this.orderModel({

@@ -98,6 +98,13 @@ export default function AdminOrderDetail() {
   const [newStatus, setNewStatus] = useState('');
   const [note, setNote] = useState('');
 
+  // Edit order details
+  const [showEditDetails, setShowEditDetails] = useState(false);
+  const [editLength, setEditLength] = useState('');
+  const [editReps, setEditReps] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+
   useEffect(() => { document.title = 'Admin — GRAFICA SLP'; }, []);
   useEffect(() => {
     if (!id) return;
@@ -122,6 +129,38 @@ export default function AdminOrderDetail() {
     }
   };
 
+  const openEditDetails = () => {
+    if (!order) return;
+    setEditLength(String(order.lengthCm));
+    setEditReps(String(order.repetitions));
+    setEditPrice(String(order.estimatedPrice));
+    setShowEditDetails(true);
+  };
+
+  const handleSaveDetails = async () => {
+    if (!id || !order) return;
+    setEditSaving(true);
+    try {
+      const updated = await api.admin.updateOrderDetails(id, {
+        lengthCm: Number(editLength),
+        repetitions: Number(editReps),
+        estimatedPrice: Number(editPrice),
+      });
+      setOrder(updated);
+      setShowEditDetails(false);
+      toast.success('Medidas y precio actualizados');
+    } catch (e: any) {
+      toast.error(e.message || 'Error al actualizar');
+    }
+    setEditSaving(false);
+  };
+
+  const getDetailsUpdatedWaUrl = (order: Order) => {
+    const phone = order.customerPhone.replace(/\D/g, '');
+    const msg = `📐 Pedido actualizado\n\nHola ${order.customerName}, te informamos que los detalles de tu pedido #${order.orderNumber} han sido actualizados.\n\n📋 *Nuevos detalles:*\n🖨️ Tipo: ${order.printType?.name}\n📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.\n💰 Precio: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nSi tienes alguna duda no dudes en contactarnos.\n\nGRAFICA SLP`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  };
+
   const getWhatsAppUrl = (order: Order) => {
     const phone = order.customerPhone.replace(/\D/g, '');
     const messages: Record<string, string> = {
@@ -131,6 +170,11 @@ export default function AdminOrderDetail() {
 ¡Tu archivo ya está en nuestras manos!
 
 🧾 Pedido: #${order.orderNumber}
+
+📋 *Detalles del pedido:*
+🖨️ Tipo: ${order.printType?.name}
+📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.
+💰 Precio estimado: *$${order.estimatedPrice?.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN*
 
 Hemos recibido tu archivo correctamente y comenzaremos a procesarlo.
 
@@ -239,6 +283,7 @@ GRAFICA SLP`,
               className="bg-white rounded-2xl border border-slate-100 p-5">
               <h3 className="font-bold text-slate-700 text-sm flex items-center gap-2 mb-4">
                 <Printer size={16} className="text-brand-blue" /> Pedido
+                <button onClick={openEditDetails} className="ml-auto text-xs font-medium text-brand-blue hover:underline">Editar</button>
               </h3>
               <div className="space-y-2.5 text-sm">
                 {[
@@ -370,6 +415,70 @@ GRAFICA SLP`,
           </motion.section>
         </div>
       </div>
+
+      {/* Edit details modal */}
+      <AnimatePresence>
+        {showEditDetails && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(13,27,42,0.5)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowEditDetails(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6"
+            >
+              <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                <Printer className="w-5 h-5 text-brand-blue" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">Editar medidas y precio</h3>
+              <p className="text-sm text-slate-500 mb-4">Corrige los datos del pedido</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Longitud (cm)</label>
+                  <input type="number" value={editLength} onChange={e => setEditLength(e.target.value)} min="1"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Repeticiones</label>
+                  <input type="number" value={editReps} onChange={e => setEditReps(e.target.value)} min="1"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Precio estimado (MXN)</label>
+                  <input type="number" value={editPrice} onChange={e => setEditPrice(e.target.value)} min="0" step="0.01"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-colors" />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setShowEditDetails(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                  Cancelar
+                </button>
+                <button onClick={handleSaveDetails} disabled={editSaving}
+                  className="flex-1 py-2.5 gradient-brand text-white font-bold rounded-xl hover:opacity-90 transition-colors text-sm disabled:opacity-60 active:scale-[0.97]">
+                  {editSaving ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+              {/* Send WhatsApp after updating */}
+              {order && (
+                <a
+                  href={getDetailsUpdatedWaUrl(order)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-400 text-green-600 hover:bg-green-50 transition-colors"
+                >
+                  <WhatsappLogo size={16} weight="fill" /> Notificar cambio al cliente
+                </a>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -2,13 +2,17 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Payment, PaymentDocument, PaymentStatus, Recurrence, DisplayStatus } from './payment.schema';
+import { Company, CompanyDocument } from '../companies/company.schema';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class PaymentsService {
   private s3: S3Client;
 
-  constructor(@InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>) {
+  constructor(
+    @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
+    @InjectModel(Company.name) private companyModel: Model<CompanyDocument>,
+  ) {
     this.s3 = new S3Client({
       region: 'auto',
       endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -107,8 +111,12 @@ export class PaymentsService {
     });
     if (existing) throw new BadRequestException('Ya existe un pago para este concepto, empresa y periodo');
 
+    // Store dueDate at noon to avoid timezone day-shift issues
+    const dueDateParsed = new Date(data.dueDate + 'T12:00:00');
+
     const payment = await this.paymentModel.create({
       ...data,
+      dueDate: dueDateParsed,
       history: [{ action: 'created', changedBy, changedAt: new Date() }],
     });
 
@@ -133,6 +141,11 @@ export class PaymentsService {
           changedAt: new Date(),
         });
       }
+    }
+
+    // Fix dueDate timezone if it's a date string
+    if (data.dueDate && typeof data.dueDate === 'string' && !data.dueDate.includes('T')) {
+      data.dueDate = new Date(data.dueDate + 'T12:00:00');
     }
 
     Object.assign(payment, data);
@@ -255,7 +268,7 @@ export class PaymentsService {
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    const [overdue, dueToday, dueThisWeek, totalPendingMonth] = await Promise.all([
+    const [overdue, dueToday, dueThisWeek, upcoming] = await Promise.all([
       // Overdue: past due, still pending
       this.paymentModel.aggregate([
         { $match: { status: PaymentStatus.PENDING, isActive: true, dueDate: { $lt: today } } },
@@ -271,9 +284,9 @@ export class PaymentsService {
         { $match: { status: PaymentStatus.PENDING, isActive: true, dueDate: { $gt: new Date(today.getTime() + 86400000), $lte: endOfWeek } } },
         { $group: { _id: null, count: { $sum: 1 }, total: { $sum: '$amount' } } },
       ]),
-      // Total pending this month
+      // Upcoming (more than 7 days)
       this.paymentModel.aggregate([
-        { $match: { status: PaymentStatus.PENDING, isActive: true, dueDate: { $gte: startOfMonth, $lte: endOfMonth } } },
+        { $match: { status: PaymentStatus.PENDING, isActive: true, dueDate: { $gt: endOfWeek } } },
         { $group: { _id: null, count: { $sum: 1 }, total: { $sum: '$amount' } } },
       ]),
     ]);
@@ -282,14 +295,19 @@ export class PaymentsService {
       overdue: { count: overdue[0]?.count || 0, total: overdue[0]?.total || 0 },
       dueToday: { count: dueToday[0]?.count || 0, total: dueToday[0]?.total || 0 },
       dueThisWeek: { count: dueThisWeek[0]?.count || 0, total: dueThisWeek[0]?.total || 0 },
-      totalPendingMonth: { count: totalPendingMonth[0]?.count || 0, total: totalPendingMonth[0]?.total || 0 },
+      upcoming: { count: upcoming[0]?.count || 0, total: upcoming[0]?.total || 0 },
     };
   }
 
   async getCompanyStats() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today.getTime() + 86400000);
 
+    // Get all active companies first
+    const allCompanies = await this.companyModel.find({ isActive: true }).lean();
+
+    // Get payment stats grouped by company
     const stats = await this.paymentModel.aggregate([
       { $match: { status: PaymentStatus.PENDING, isActive: true } },
       {
@@ -300,44 +318,43 @@ export class PaymentsService {
           overdueCount: {
             $sum: { $cond: [{ $lt: ['$dueDate', today] }, 1, 0] },
           },
+          dueTodayCount: {
+            $sum: { $cond: [{ $and: [{ $gte: ['$dueDate', today] }, { $lt: ['$dueDate', tomorrow] }] }, 1, 0] },
+          },
         },
       },
-      {
-        $lookup: {
-          from: 'companies',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'companyInfo',
-        },
-      },
-      { $unwind: '$companyInfo' },
-      {
-        $project: {
-          _id: 1,
-          name: '$companyInfo.name',
-          shortName: '$companyInfo.shortName',
-          color: '$companyInfo.color',
-          pendingCount: 1,
-          pendingTotal: 1,
-          overdueCount: 1,
-        },
-      },
-      { $sort: { overdueCount: -1, pendingTotal: -1 } },
     ]);
 
-    return stats;
+    const statsMap = new Map(stats.map((s: any) => [String(s._id), s]));
+
+    // Merge: all companies with their stats (or zeros)
+    return allCompanies.map((company: any) => {
+      const s = statsMap.get(String(company._id));
+      return {
+        _id: company._id,
+        name: company.name,
+        shortName: company.shortName,
+        color: company.color,
+        pendingCount: s?.pendingCount || 0,
+        pendingTotal: s?.pendingTotal || 0,
+        overdueCount: s?.overdueCount || 0,
+        dueTodayCount: s?.dueTodayCount || 0,
+      };
+    });
   }
 
-  async getAttentionPayments(tab: 'overdue' | 'today' | 'week' | 'upcoming' | 'paid' = 'overdue', limit = 10) {
+  async getAttentionPayments(tab: 'overdue' | 'today' | 'week' | 'upcoming' | 'paid' = 'overdue', limit = 10, company?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today.getTime() + 86400000);
     const endOfWeek = new Date(today.getTime() + 7 * 86400000);
 
+    const companyFilter = company ? { company } : {};
+
     // Paid tab — show recently paid
     if (tab === 'paid') {
       return this.paymentModel
-        .find({ status: PaymentStatus.PAID, isActive: true })
+        .find({ status: PaymentStatus.PAID, isActive: true, ...companyFilter })
         .populate(this.populateFields())
         .sort({ paidAt: -1 })
         .limit(limit);
@@ -360,7 +377,7 @@ export class PaymentsService {
     }
 
     return this.paymentModel
-      .find({ status: PaymentStatus.PENDING, isActive: true, dueDate: dateFilter })
+      .find({ status: PaymentStatus.PENDING, isActive: true, dueDate: dateFilter, ...companyFilter })
       .populate(this.populateFields())
       .sort({ dueDate: 1 })
       .limit(limit);

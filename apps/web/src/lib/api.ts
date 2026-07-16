@@ -107,6 +107,8 @@ export const api = {
       req<Order>(`/admin/orders/${id}/whatsapp-sent`, { method: 'PATCH' }),
     markInvoiced: (id: string) =>
       req<Order>(`/admin/orders/${id}/invoiced`, { method: 'PATCH' }),
+    updateOrderDetails: (id: string, data: { lengthCm?: number; repetitions?: number; estimatedPrice?: number }) =>
+      req<Order>(`/admin/orders/${id}/details`, { method: 'PATCH', body: JSON.stringify(data) }),
     bulkDeleteDelivered: () =>
       req<{ deleted: number; filesDeleted: number; errors: string[] }>('/admin/orders/bulk/delivered?status=delivered', { method: 'DELETE' }),
     bulkDeleteCancelled: () =>
@@ -120,10 +122,11 @@ export const api = {
     dashboard: {
       stats: () => req<any>('/control/payments/dashboard/stats'),
       companies: () => req<any[]>('/control/payments/dashboard/companies'),
-      attention: (tab?: string, limit?: number) => {
+      attention: (tab?: string, limit?: number, company?: string) => {
         const params = new URLSearchParams();
         if (tab) params.set('tab', tab);
         if (limit) params.set('limit', String(limit));
+        if (company) params.set('company', company);
         const qs = params.toString() ? `?${params.toString()}` : '';
         return req<any[]>(`/control/payments/dashboard/attention${qs}`);
       },
@@ -210,6 +213,7 @@ export interface PrintType {
   widthCm: number;
   minLengthCm: number;
   pricePerMeter: number;
+  pricingType?: string; // 'per_meter' | 'per_unit'
   currency: string;
 }
 
