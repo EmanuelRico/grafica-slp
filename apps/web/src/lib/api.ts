@@ -113,6 +113,91 @@ export const api = {
     storageStats: () =>
       req<{ totalBytes: number; totalGB: number; limitGB: number; usedPercent: number; byStatus: Record<string, { bytes: number; count: number }> }>('/admin/storage/stats'),
   },
+
+  // Control de Gastos
+  control: {
+    dashboard: {
+      stats: () => req<any>('/control/payments/dashboard/stats'),
+      companies: () => req<any[]>('/control/payments/dashboard/companies'),
+      attention: (tab?: string, limit?: number) => {
+        const params = new URLSearchParams();
+        if (tab) params.set('tab', tab);
+        if (limit) params.set('limit', String(limit));
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        return req<any[]>(`/control/payments/dashboard/attention${qs}`);
+      },
+    },
+    payments: {
+      list: (params?: Record<string, string>) => {
+        const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+        return req<{ data: any[]; total: number; page: number; limit: number }>(`/control/payments${qs}`);
+      },
+      getById: (id: string) => req<any>(`/control/payments/${id}`),
+      create: (data: any) => req<any>('/control/payments', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: any) => req<any>(`/control/payments/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+      markPaid: (id: string, data: { paidAt: string; bankAccount?: string; paymentNotes?: string }) =>
+        req<any>(`/control/payments/${id}/pay`, { method: 'PATCH', body: JSON.stringify(data) }),
+      cancel: (id: string) => req<any>(`/control/payments/${id}/cancel`, { method: 'PATCH' }),
+      calendar: (year: number, month: number) => req<any[]>(`/control/payments/calendar/${year}/${month}`),
+      storageStats: () => req<any>('/control/payments/storage/stats'),
+      bulkDeleteReceipts: (olderThanDays?: number) => {
+        const qs = olderThanDays ? `?olderThanDays=${olderThanDays}` : '';
+        return req<any>(`/control/payments/receipts/bulk${qs}`, { method: 'DELETE' });
+      },
+    },
+    companies: {
+      list: (includeInactive?: boolean) => req<any[]>(`/control/companies${includeInactive ? '?includeInactive=true' : ''}`),
+      getById: (id: string) => req<any>(`/control/companies/${id}`),
+      create: (data: any) => req<any>('/control/companies', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: any) => req<any>(`/control/companies/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+      deactivate: (id: string) => req<any>(`/control/companies/${id}/deactivate`, { method: 'PATCH' }),
+      activate: (id: string) => req<any>(`/control/companies/${id}/activate`, { method: 'PATCH' }),
+    },
+    categories: {
+      list: (includeInactive?: boolean) => req<any[]>(`/control/categories${includeInactive ? '?includeInactive=true' : ''}`),
+      getById: (id: string) => req<any>(`/control/categories/${id}`),
+      create: (data: any) => req<any>('/control/categories', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: any) => req<any>(`/control/categories/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+      deactivate: (id: string) => req<any>(`/control/categories/${id}/deactivate`, { method: 'PATCH' }),
+      activate: (id: string) => req<any>(`/control/categories/${id}/activate`, { method: 'PATCH' }),
+    },
+    concepts: {
+      list: (includeInactive?: boolean) => req<any[]>(`/control/concepts${includeInactive ? '?includeInactive=true' : ''}`),
+      getById: (id: string) => req<any>(`/control/concepts/${id}`),
+      create: (data: any) => req<any>('/control/concepts', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: any) => req<any>(`/control/concepts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+      deactivate: (id: string) => req<any>(`/control/concepts/${id}/deactivate`, { method: 'PATCH' }),
+      activate: (id: string) => req<any>(`/control/concepts/${id}/activate`, { method: 'PATCH' }),
+    },
+    providers: {
+      list: (params?: { includeInactive?: boolean; companyId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.includeInactive) qs.set('includeInactive', 'true');
+        if (params?.companyId) qs.set('companyId', params.companyId);
+        const qStr = qs.toString() ? `?${qs.toString()}` : '';
+        return req<any[]>(`/control/providers${qStr}`);
+      },
+      getById: (id: string) => req<any>(`/control/providers/${id}`),
+      create: (data: any) => req<any>('/control/providers', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: any) => req<any>(`/control/providers/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+      deactivate: (id: string) => req<any>(`/control/providers/${id}/deactivate`, { method: 'PATCH' }),
+      activate: (id: string) => req<any>(`/control/providers/${id}/activate`, { method: 'PATCH' }),
+    },
+    bankAccounts: {
+      list: (params?: { includeInactive?: boolean; companyId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.includeInactive) qs.set('includeInactive', 'true');
+        if (params?.companyId) qs.set('companyId', params.companyId);
+        const qStr = qs.toString() ? `?${qs.toString()}` : '';
+        return req<any[]>(`/control/bank-accounts${qStr}`);
+      },
+      getById: (id: string) => req<any>(`/control/bank-accounts/${id}`),
+      create: (data: any) => req<any>('/control/bank-accounts', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: any) => req<any>(`/control/bank-accounts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+      deactivate: (id: string) => req<any>(`/control/bank-accounts/${id}/deactivate`, { method: 'PATCH' }),
+      activate: (id: string) => req<any>(`/control/bank-accounts/${id}/activate`, { method: 'PATCH' }),
+    },
+  },
 };
 
 // Types

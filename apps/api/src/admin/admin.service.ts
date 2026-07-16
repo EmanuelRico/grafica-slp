@@ -81,6 +81,11 @@ export class AdminService {
       finished: 'Terminado',
       delivered: 'Entregado',
     };
+
+    if (order.status === 'finished') {
+      return `🎉 ¡Tu pedido está listo!\n\nHola ${order.customerName}, te informamos que tu pedido ya fue terminado.\n\n📋 *Detalles del pedido:*\n🧾 Folio: *${order.orderNumber}*\n🖨️ Tipo: ${order.printType?.name || 'N/A'}\n📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.\n💰 Precio estimado: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nPuedes pasar a recogerlo cuando gustes dentro de nuestro horario de atención.\n\nGracias por crear con nosotros 💙\n\nGRAFICA SLP`;
+    }
+
     return `Hola ${order.customerName}, tu pedido ${order.orderNumber} está ahora en estado: *${statusLabels[order.status]}*.\n\nGracias,\nGRAFICA SLP`;
   }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, LogOut, Printer, Package, Clock, CheckCircle2, Truck, CreditCard, Activity, Trash2 } from 'lucide-react';
 import { api, Order } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -31,6 +31,7 @@ const PRINT_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, logout } = useAuth();
   const toast = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -38,10 +39,17 @@ export default function AdminDashboard() {
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [printTypeCounts, setPrintTypeCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [printTypeFilter, setPrintTypeFilter] = useState('');
-  const [page, setPage] = useState(1);
+
+  // Persist filters in URL params
+  const search = searchParams.get('search') || '';
+  const statusFilter = searchParams.get('status') || '';
+  const printTypeFilter = searchParams.get('printType') || '';
+  const page = Number(searchParams.get('page')) || 1;
+
+  const setSearch = (v: string) => { const p = new URLSearchParams(searchParams); if (v) p.set('search', v); else p.delete('search'); p.set('page', '1'); setSearchParams(p, { replace: true }); };
+  const setStatusFilter = (v: string) => { const p = new URLSearchParams(searchParams); if (v) p.set('status', v); else p.delete('status'); p.set('page', '1'); setSearchParams(p, { replace: true }); };
+  const setPrintTypeFilter = (v: string) => { const p = new URLSearchParams(searchParams); if (v) p.set('printType', v); else p.delete('printType'); p.set('page', '1'); setSearchParams(p, { replace: true }); };
+  const setPage = (v: number) => { const p = new URLSearchParams(searchParams); p.set('page', String(v)); setSearchParams(p, { replace: true }); };
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -257,7 +265,7 @@ export default function AdminDashboard() {
             return (
               <motion.div key={slug} whileHover={{ y: -2 }}
                 className={`bg-white rounded-xl border p-4 cursor-pointer transition-all ${printTypeFilter === slug ? 'ring-2 ring-brand-blue shadow-md' : ''}`}
-                onClick={() => { setPrintTypeFilter(printTypeFilter === slug ? '' : slug); setPage(1); }}>
+                onClick={() => { setPrintTypeFilter(printTypeFilter === slug ? '' : slug); }}>
                 <div className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${cfg.color} mb-2`}>
                   <Printer className="w-3 h-3" /> {cfg.label}
                 </div>
@@ -325,14 +333,19 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl border border-slate-100 p-4 flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue"
+            <input className="w-full pl-9 pr-9 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue"
               placeholder="Buscar pedido, nombre, teléfono..."
-              value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+              value={search} onChange={(e) => { setSearch(e.target.value); }} />
+            {search && (
+              <button onClick={() => { setSearch(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 hover:text-slate-600 transition-colors">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-400" />
             <select className="text-sm border border-slate-200 rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
-              value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
+              value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); }}>
               {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
@@ -370,7 +383,7 @@ export default function AdminDashboard() {
                   const phone = order.customerPhone.replace(/\D/g, '');
                   const msgs: Record<string, string> = {
                     received: `✨ Pedido recibido\n\n¡Tu archivo ya está en nuestras manos!\n\n🧾 Pedido: #${order.orderNumber}\n\nHemos recibido tu archivo correctamente y comenzaremos a procesarlo.\n\nTe notificaremos nuevamente cuando esté listo.\n\nGRAFICA SLP`,
-                    finished: `🎉 Pedido terminado\n\n¡Buenas noticias!\n\nTu pedido #${order.orderNumber} ya está listo.\n\nPuedes pasar a recogerlo cuando gustes dentro de nuestro horario de atención.\n\nGracias por crear con nosotros 💙\n\nGRAFICA SLP`,
+                    finished: `🎉 ¡Tu pedido está listo!\n\nHola ${order.customerName}, te informamos que tu pedido ya fue terminado.\n\n📋 *Detalles del pedido:*\n🧾 Folio: *#${order.orderNumber}*\n🖨️ Tipo: ${order.printType?.name || 'N/A'}\n📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.\n💰 Precio estimado: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nPuedes pasar a recogerlo cuando gustes dentro de nuestro horario de atención.\n\nGracias por crear con nosotros 💙\n\nGRAFICA SLP`,
                     cancelled: `❌ Pedido cancelado\n\nHola, te informamos que tu pedido #${order.orderNumber} ha sido cancelado.\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nGRAFICA SLP`,
                   };
                   return `https://wa.me/${phone}?text=${encodeURIComponent(msgs[order.status] || '')}`;
@@ -468,10 +481,10 @@ export default function AdminDashboard() {
         {/* Pagination */}
         {total > 10 && (
           <div className="flex justify-center gap-2">
-            <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}
+            <button disabled={page === 1} onClick={() => setPage(page - 1)}
               className="px-4 py-2 text-sm font-medium border border-slate-200 rounded-lg transition-colors hover:bg-brand-blue hover:text-white hover:border-brand-blue disabled:opacity-50 disabled:pointer-events-none">← Anterior</button>
             <span className="px-4 py-2 text-sm text-slate-600">Página {page}</span>
-            <button disabled={page * 10 >= total} onClick={() => setPage((p) => p + 1)}
+            <button disabled={page * 10 >= total} onClick={() => setPage(page + 1)}
               className="px-4 py-2 text-sm font-medium border border-slate-200 rounded-lg transition-colors hover:bg-brand-blue hover:text-white hover:border-brand-blue disabled:opacity-50 disabled:pointer-events-none">Siguiente →</button>
           </div>
         )}
