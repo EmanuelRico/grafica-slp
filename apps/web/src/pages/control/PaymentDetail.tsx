@@ -90,7 +90,7 @@ export default function PaymentDetail() {
     if (!id) return;
     setSubmitting(true);
     try {
-      await (api as any).control.payments.markPaid(id, { paidAt, bankAccountId: bankAccountId || undefined, notes: paidNotes || undefined });
+      await (api as any).control.payments.markPaid(id, { paidAt, bankAccount: bankAccountId || undefined, paymentNotes: paidNotes || undefined });
       toast.success('Pago marcado como pagado');
       setShowPaidModal(false);
       fetchPayment();

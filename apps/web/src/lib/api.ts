@@ -5,8 +5,9 @@ export const loadingHooks = { start: () => {}, done: () => {} };
 
 let redirecting = false;
 
-function httpErrorMessage(status: number, serverMsg?: string): string {
-  if (serverMsg && serverMsg !== 'Error desconocido') return serverMsg;
+function httpErrorMessage(status: number, serverMsg?: string | string[]): string {
+  const msg = Array.isArray(serverMsg) ? serverMsg.join('. ') : serverMsg;
+  if (msg && msg !== 'Error desconocido') return msg;
   if (status === 400) return 'Los datos enviados no son válidos. Revisa la información e intenta de nuevo.';
   if (status === 403) return 'No tienes permisos para realizar esta acción.';
   if (status === 404) return 'No se encontró el recurso solicitado.';

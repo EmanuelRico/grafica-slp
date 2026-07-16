@@ -62,7 +62,7 @@ export default function Providers() {
     }
     setSubmitting(true);
     try {
-      const data = { name: formName, companyIds: formCompanyIds };
+      const data = { name: formName, companies: formCompanyIds };
       if (editing) {
         await (api as any).control.providers.update(editing._id, data);
         toast.success('Proveedor actualizado');

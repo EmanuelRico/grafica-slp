@@ -5,6 +5,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../auth/user.schema';
 import { PaymentsService } from './payments.service';
 import { IsString, IsOptional, IsNumber, IsEnum, Min, Max } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Recurrence } from './payment.schema';
 
 class CreatePaymentDto {
@@ -12,9 +13,9 @@ class CreatePaymentDto {
   @IsString() concept: string;
   @IsString() category: string;
   @IsOptional() @IsString() provider?: string;
-  @IsNumber() @Min(1) @Max(12) periodMonth: number;
-  @IsNumber() periodYear: number;
-  @IsNumber() @Min(0) amount: number;
+  @Type(() => Number) @IsNumber() @Min(1) @Max(12) periodMonth: number;
+  @Type(() => Number) @IsNumber() periodYear: number;
+  @Type(() => Number) @IsNumber() @Min(0) amount: number;
   @IsString() dueDate: string;
   @IsOptional() @IsEnum(Recurrence) recurrence?: string;
   @IsOptional() @IsString() paymentNotes?: string;
@@ -25,9 +26,9 @@ class UpdatePaymentDto {
   @IsOptional() @IsString() concept?: string;
   @IsOptional() @IsString() category?: string;
   @IsOptional() @IsString() provider?: string;
-  @IsOptional() @IsNumber() periodMonth?: number;
-  @IsOptional() @IsNumber() periodYear?: number;
-  @IsOptional() @IsNumber() amount?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() periodMonth?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() periodYear?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() amount?: number;
   @IsOptional() @IsString() dueDate?: string;
   @IsOptional() @IsEnum(Recurrence) recurrence?: string;
   @IsOptional() @IsString() paymentNotes?: string;
