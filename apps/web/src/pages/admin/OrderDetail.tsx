@@ -184,7 +184,7 @@ GRAFICA SLP`,
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-100 px-4 lg:px-8 py-4 flex items-center gap-3 sticky top-0 z-10">
-        <button onClick={() => navigate('/admin')}
+        <button onClick={() => navigate(-1)}
           className="flex items-center gap-1.5 text-slate-500 hover:text-brand-ink font-medium text-sm transition-colors">
           <CaretLeft size={16} weight="bold" /> Dashboard
         </button>

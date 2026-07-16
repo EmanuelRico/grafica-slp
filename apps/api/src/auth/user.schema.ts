@@ -6,6 +6,9 @@ export type UserDocument = User & Document;
 export enum UserRole {
   ADMIN = 'admin',
   OPERATOR = 'operator',
+  CONTROL_ADMIN = 'control_admin',
+  CONTROL_OPERATOR = 'control_operator',
+  CONTROL_READ = 'control_read',
 }
 
 @Schema({ timestamps: true })

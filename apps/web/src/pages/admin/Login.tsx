@@ -22,7 +22,12 @@ export default function AdminLogin() {
     try {
       const { accessToken, user } = await api.login(email, password);
       login(accessToken, user);
-      navigate('/admin');
+      // Redirect based on role
+      if (user.role?.startsWith('control_')) {
+        navigate('/control');
+      } else {
+        navigate('/admin');
+      }
     } catch (e: any) {
       setError(e.message || 'Credenciales incorrectas');
     } finally {
