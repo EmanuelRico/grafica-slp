@@ -19,6 +19,7 @@ export default function Companies() {
   const [formName, setFormName] = useState('');
   const [formShortName, setFormShortName] = useState('');
   const [formRfc, setFormRfc] = useState('');
+  const [formColor, setFormColor] = useState('#01AEF0');
 
   const fetchCompanies = useCallback(async () => {
     setLoading(true);
@@ -41,6 +42,7 @@ export default function Companies() {
     setFormName('');
     setFormShortName('');
     setFormRfc('');
+    setFormColor('#01AEF0');
     setShowModal(true);
   };
 
@@ -49,6 +51,7 @@ export default function Companies() {
     setFormName(company.name || '');
     setFormShortName(company.shortName || '');
     setFormRfc(company.rfc || '');
+    setFormColor(company.color || '#01AEF0');
     setShowModal(true);
   };
 
@@ -60,7 +63,7 @@ export default function Companies() {
     }
     setSubmitting(true);
     try {
-      const data = { name: formName, shortName: formShortName, rfc: formRfc || undefined };
+      const data = { name: formName, shortName: formShortName, rfc: formRfc || undefined, color: formColor };
       if (editing) {
         await (api as any).control.companies.update(editing._id, data);
         toast.success('Empresa actualizada');
@@ -146,15 +149,18 @@ export default function Companies() {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <Buildings size={20} weight="duotone" className="text-brand-blue" />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${company.color || '#01AEF0'}1A` }}>
+                    <Buildings size={20} weight="duotone" style={{ color: company.color || '#01AEF0' }} />
                   </div>
                   <div>
                     <p className="font-semibold text-slate-800">{company.name}</p>
                     <p className="text-xs text-slate-500">{company.shortName}</p>
                   </div>
                 </div>
-                <span className={`w-2.5 h-2.5 rounded-full mt-1 ${company.active === false ? 'bg-slate-300' : 'bg-green-400'}`} />
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: company.color || '#01AEF0' }} />
+                  <span className={`w-2.5 h-2.5 rounded-full ${company.active === false ? 'bg-slate-300' : 'bg-green-400'}`} />
+                </div>
               </div>
 
               {company.rfc && (
@@ -237,6 +243,29 @@ export default function Companies() {
                     maxLength={13}
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none transition-all"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Color de la empresa</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={formColor}
+                      onChange={e => setFormColor(e.target.value)}
+                      className="w-10 h-10 rounded-xl border border-slate-200 cursor-pointer p-0.5"
+                    />
+                    <div className="flex-1 flex gap-2 flex-wrap">
+                      {['#01AEF0', '#8B5CF6', '#10B981', '#EF4444', '#F59E0B', '#EC4899', '#6366F1', '#14B8A6'].map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setFormColor(c)}
+                          className={`w-7 h-7 rounded-lg transition-all ${formColor === c ? 'ring-2 ring-offset-2 ring-slate-400 scale-110' : 'hover:scale-105'}`}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 pt-2">

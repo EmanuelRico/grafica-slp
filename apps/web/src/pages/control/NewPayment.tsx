@@ -38,6 +38,7 @@ export default function NewPayment() {
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [recurrence, setRecurrence] = useState('none');
+  const [fixedAmount, setFixedAmount] = useState(true);
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
@@ -77,6 +78,7 @@ export default function NewPayment() {
         amount: Number(amount),
         dueDate,
         recurrence,
+        fixedAmount,
         paymentNotes: notes || undefined,
       });
       toast.success('Pago creado exitosamente');
@@ -256,6 +258,21 @@ export default function NewPayment() {
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
+          </div>
+        </div>
+
+        {/* Fixed Amount Toggle */}
+        <div className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+          <button
+            type="button"
+            onClick={() => setFixedAmount(!fixedAmount)}
+            className={`relative flex-shrink-0 w-10 h-5 rounded-full transition-colors duration-200 ${fixedAmount ? 'bg-brand-blue' : 'bg-slate-300'}`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${fixedAmount ? 'translate-x-5' : 'translate-x-0'}`} />
+          </button>
+          <div>
+            <p className="text-sm font-medium text-slate-700">Monto fijo</p>
+            <p className="text-xs text-slate-500 mt-0.5">Si se desactiva, el siguiente pago se generará sin monto definido</p>
           </div>
         </div>
 

@@ -139,6 +139,7 @@ export const api = {
       markPaid: (id: string, data: { paidAt: string; bankAccount?: string; paymentNotes?: string }) =>
         req<any>(`/control/payments/${id}/pay`, { method: 'PATCH', body: JSON.stringify(data) }),
       cancel: (id: string) => req<any>(`/control/payments/${id}/cancel`, { method: 'PATCH' }),
+      delete: (id: string) => req<any>(`/control/payments/${id}`, { method: 'DELETE' }),
       calendar: (year: number, month: number) => req<any[]>(`/control/payments/calendar/${year}/${month}`),
       storageStats: () => req<any>('/control/payments/storage/stats'),
       bulkDeleteReceipts: (olderThanDays?: number) => {

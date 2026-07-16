@@ -10,12 +10,14 @@ class CreateCompanyDto {
   @IsString() name: string;
   @IsOptional() @IsString() shortName?: string;
   @IsOptional() @IsString() rfc?: string;
+  @IsOptional() @IsString() color?: string;
 }
 
 class UpdateCompanyDto {
   @IsOptional() @IsString() name?: string;
   @IsOptional() @IsString() shortName?: string;
   @IsOptional() @IsString() rfc?: string;
+  @IsOptional() @IsString() color?: string;
 }
 
 @Controller('control/companies')

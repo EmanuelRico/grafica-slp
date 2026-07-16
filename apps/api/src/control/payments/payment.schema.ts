@@ -82,6 +82,8 @@ export class Payment {
   // Recurrence
   @Prop({ enum: Recurrence, default: Recurrence.NONE }) recurrence: Recurrence;
 
+  @Prop({ default: true }) fixedAmount: boolean;
+
   // Audit history
   @Prop({ type: [PaymentHistoryEntrySchema], default: [] }) history: PaymentHistoryEntry[];
 

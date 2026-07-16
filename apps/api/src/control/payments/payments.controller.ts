@@ -4,7 +4,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../auth/user.schema';
 import { PaymentsService } from './payments.service';
-import { IsString, IsOptional, IsNumber, IsEnum, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEnum, IsBoolean, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Recurrence } from './payment.schema';
 
@@ -19,6 +19,7 @@ class CreatePaymentDto {
   @IsString() dueDate: string;
   @IsOptional() @IsEnum(Recurrence) recurrence?: string;
   @IsOptional() @IsString() paymentNotes?: string;
+  @IsOptional() @IsBoolean() fixedAmount?: boolean;
 }
 
 class UpdatePaymentDto {
@@ -32,6 +33,7 @@ class UpdatePaymentDto {
   @IsOptional() @IsString() dueDate?: string;
   @IsOptional() @IsEnum(Recurrence) recurrence?: string;
   @IsOptional() @IsString() paymentNotes?: string;
+  @IsOptional() @IsBoolean() fixedAmount?: boolean;
 }
 
 class MarkPaidDto {
@@ -134,5 +136,11 @@ export class PaymentsController {
   @Roles(UserRole.CONTROL_ADMIN)
   async cancel(@Param('id') id: string, @Req() req: any) {
     return this.paymentsService.cancel(id, req.user.userId);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.CONTROL_ADMIN)
+  async delete(@Param('id') id: string) {
+    return this.paymentsService.delete(id);
   }
 }
