@@ -7,8 +7,8 @@ interface Data { printTypeSlug: string; lengthCm: number; repetitions: number; c
 interface Props { initial: Data; onComplete: (data: Data) => void; }
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-  dtf_uv:            { bg: 'bg-blue-50',   border: 'border-brand-blue',   text: 'text-brand-blue',   dot: 'bg-brand-blue' },
-  dtf_textile:       { bg: 'bg-sky-50',    border: 'border-sky-400',      text: 'text-sky-600',      dot: 'bg-sky-400' },
+  dtf_uv:            { bg: 'bg-cyan-50',   border: 'border-cyan-400',     text: 'text-cyan-600',     dot: 'bg-cyan-400' },
+  dtf_textile:       { bg: 'bg-pink-50',   border: 'border-pink-400',     text: 'text-pink-600',     dot: 'bg-pink-400' },
   sublimation:       { bg: 'bg-orange-50', border: 'border-orange-400',   text: 'text-orange-600',   dot: 'bg-orange-400' },
   sublimation_sheet: { bg: 'bg-amber-50',  border: 'border-amber-400',    text: 'text-amber-600',    dot: 'bg-amber-400' },
 };
@@ -57,7 +57,7 @@ export default function Step3Details({ initial, onComplete }: Props) {
             <motion.button key={pt.slug} type="button"
               whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
               onClick={() => {
-                setData(d => ({ ...d, printTypeSlug: pt.slug, lengthCm: 0 }));
+                setData(d => ({ ...d, printTypeSlug: pt.slug, lengthCm: 0, repetitions: pt.pricingType === 'per_unit' ? 1 : d.repetitions }));
                 setErrors(e => { const n = { ...e }; delete n.lengthCm; delete n.printTypeSlug; return n; });
               }}
               className={`relative text-left p-4 rounded-2xl border-2 transition-all duration-200 ${
@@ -101,6 +101,7 @@ export default function Step3Details({ initial, onComplete }: Props) {
           </div>
           {errors.lengthCm && <p className="text-red-500 text-xs mt-1">{errors.lengthCm}</p>}
         </div>
+        {!isPerUnit && (
         <div>
           <label className="text-sm font-semibold text-brand-ink block mb-1.5">
             Número de repeticiones <span className="text-red-400">*</span>
@@ -111,6 +112,7 @@ export default function Step3Details({ initial, onComplete }: Props) {
             onChange={(e) => setData(d => ({ ...d, repetitions: +e.target.value }))} />
           {errors.repetitions && <p className="text-red-500 text-xs mt-1">{errors.repetitions}</p>}
         </div>
+        )}
       </div>
 
       {/* Live price */}

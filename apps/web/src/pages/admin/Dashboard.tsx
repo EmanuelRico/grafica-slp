@@ -24,9 +24,10 @@ const STATUS_OPTIONS = [
 ];
 
 const PRINT_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  dtf_uv:       { label: 'DTF UV',        color: 'text-cyan-600 bg-cyan-50 border-cyan-200' },
-  dtf_textile:  { label: 'DTF Textil',    color: 'text-pink-600 bg-pink-50 border-pink-200' },
-  sublimation:  { label: 'Sublimación',   color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  dtf_uv:            { label: 'DTF UV',           color: 'text-cyan-600 bg-cyan-50 border-cyan-200' },
+  dtf_textile:       { label: 'DTF Textil',       color: 'text-pink-600 bg-pink-50 border-pink-200' },
+  sublimation:       { label: 'Sublimación',      color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  sublimation_sheet: { label: 'Sublimación A4',   color: 'text-amber-600 bg-amber-50 border-amber-200' },
 };
 
 export default function AdminDashboard() {
@@ -204,7 +205,7 @@ export default function AdminDashboard() {
               </p>
               <div className="mt-6 flex gap-3">
                 <button onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                  className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 text-sm">
                   Cancelar
                 </button>
                 <button onClick={handleBulkDelete}
@@ -259,7 +260,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Print type cards */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Object.entries(PRINT_TYPE_CONFIG).map(([slug, cfg]) => {
             const count = printTypeCounts[slug] || 0;
             return (
@@ -382,8 +383,8 @@ export default function AdminDashboard() {
                 const getWaUrl = () => {
                   const phone = order.customerPhone.replace(/\D/g, '');
                   const msgs: Record<string, string> = {
-                    received: `✨ Pedido recibido\n\n¡Tu archivo ya está en nuestras manos!\n\n🧾 Pedido: #${order.orderNumber}\n\n📋 *Detalles del pedido:*\n🖨️ Tipo: ${order.printType?.name}\n📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.\n💰 Precio estimado: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nHemos recibido tu archivo correctamente y comenzaremos a procesarlo.\n\nTe notificaremos nuevamente cuando esté listo.\n\nGRAFICA SLP`,
-                    finished: `🎉 ¡Tu pedido está listo!\n\nHola ${order.customerName}, te informamos que tu pedido ya fue terminado.\n\n📋 *Detalles del pedido:*\n🧾 Folio: *#${order.orderNumber}*\n🖨️ Tipo: ${order.printType?.name || 'N/A'}\n📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.\n💰 Precio estimado: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nPuedes pasar a recogerlo cuando gustes dentro de nuestro horario de atención.\n\nGracias por crear con nosotros 💙\n\nGRAFICA SLP`,
+                    received: `✨ Pedido recibido\n\n¡Tu archivo ya está en nuestras manos!\n\n🧾 Pedido: #${order.orderNumber}\n\n📋 *Detalles del pedido:*\n🖨️ Tipo: ${order.printType?.name}\n📐 ${(order.printType as any)?.pricingType === 'per_unit' ? `Cantidad: ${order.lengthCm} hojas` : `Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.`}\n💰 Precio estimado: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nHemos recibido tu archivo correctamente y comenzaremos a procesarlo.\n\nTe notificaremos nuevamente cuando esté listo.\n\nGRAFICA SLP`,
+                    finished: `🎉 ¡Tu pedido está listo!\n\nHola ${order.customerName}, te informamos que tu pedido ya fue terminado.\n\n📋 *Detalles del pedido:*\n🧾 Folio: *#${order.orderNumber}*\n🖨️ Tipo: ${order.printType?.name || 'N/A'}\n📐 ${(order.printType as any)?.pricingType === 'per_unit' ? `Cantidad: ${order.lengthCm} hojas` : `Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.`}\n💰 Precio estimado: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nPuedes pasar a recogerlo cuando gustes dentro de nuestro horario de atención.\n\nGracias por crear con nosotros 💙\n\nGRAFICA SLP`,
                     cancelled: `❌ Pedido cancelado\n\nHola, te informamos que tu pedido #${order.orderNumber} ha sido cancelado.\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nGRAFICA SLP`,
                   };
                   return `https://wa.me/${phone}?text=${encodeURIComponent(msgs[order.status] || '')}`;
@@ -442,7 +443,7 @@ export default function AdminDashboard() {
                     {/* Price & specs */}
                     <div className="text-right">
                       <p className="text-sm font-bold text-brand-blue">${order.estimatedPrice.toLocaleString('es-MX')}</p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">{order.lengthCm}cm × {order.repetitions} rep</p>
+                      <p className="text-sm font-bold text-slate-700 mt-0.5">{(order.printType as any)?.pricingType === 'per_unit' || order.printType?.slug === 'sublimation_sheet' ? `${order.lengthCm} hojas` : `${order.lengthCm}cm × ${order.repetitions} rep`}</p>
                     </div>
 
                     {/* Inline status dropdown */}

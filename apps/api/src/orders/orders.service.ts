@@ -63,6 +63,7 @@ export class OrdersService {
         widthCm: printType.widthCm,
         minLengthCm: printType.minLengthCm,
         pricePerMeter: printType.pricePerMeter,
+        pricingType: printType.pricingType || 'per_meter',
       },
       lengthCm: dto.lengthCm,
       repetitions: dto.repetitions,

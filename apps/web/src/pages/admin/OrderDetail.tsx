@@ -137,6 +137,19 @@ export default function AdminOrderDetail() {
     setShowEditDetails(true);
   };
 
+  const recalcPrice = (length: string, reps: string) => {
+    if (!order) return;
+    const l = Number(length) || 0;
+    const r = Number(reps) || 1;
+    const pt = order.printType;
+    if (!pt) return;
+    const isPerUnit = (pt as any).pricingType === 'per_unit' || pt.slug === 'sublimation_sheet';
+    const price = isPerUnit
+      ? l * r * pt.pricePerMeter
+      : (l / 100) * r * pt.pricePerMeter;
+    setEditPrice(String(Math.round(price * 100) / 100));
+  };
+
   const handleSaveDetails = async () => {
     if (!id || !order) return;
     setEditSaving(true);
@@ -157,7 +170,9 @@ export default function AdminOrderDetail() {
 
   const getDetailsUpdatedWaUrl = (order: Order) => {
     const phone = order.customerPhone.replace(/\D/g, '');
-    const msg = `📐 Pedido actualizado\n\nHola ${order.customerName}, te informamos que los detalles de tu pedido #${order.orderNumber} han sido actualizados.\n\n📋 *Nuevos detalles:*\n🖨️ Tipo: ${order.printType?.name}\n📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.\n💰 Precio: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nSi tienes alguna duda no dudes en contactarnos.\n\nGRAFICA SLP`;
+    const isPerUnit = (order.printType as any)?.pricingType === 'per_unit';
+    const medidas = isPerUnit ? `${order.lengthCm} hojas` : `${order.lengthCm}cm × ${order.repetitions} rep.`;
+    const msg = `📐 Pedido actualizado\n\nHola ${order.customerName}, te informamos que los detalles de tu pedido #${order.orderNumber} han sido actualizados.\n\n📋 *Nuevos detalles:*\n🖨️ Tipo: ${order.printType?.name}\n📐 ${isPerUnit ? 'Cantidad' : 'Medidas'}: ${medidas}\n💰 Precio: *$${order.estimatedPrice?.toFixed(2)} MXN*\n\nSi tienes alguna duda no dudes en contactarnos.\n\nGRAFICA SLP`;
     return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
   };
 
@@ -173,7 +188,7 @@ export default function AdminOrderDetail() {
 
 📋 *Detalles del pedido:*
 🖨️ Tipo: ${order.printType?.name}
-📐 Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.
+📐 ${(order.printType as any)?.pricingType === 'per_unit' ? `Cantidad: ${order.lengthCm} hojas` : `Medidas: ${order.lengthCm}cm × ${order.repetitions} rep.`}
 💰 Precio estimado: *$${order.estimatedPrice?.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN*
 
 Hemos recibido tu archivo correctamente y comenzaremos a procesarlo.
@@ -286,13 +301,18 @@ GRAFICA SLP`,
                 <button onClick={openEditDetails} className="ml-auto text-xs font-medium text-brand-blue hover:underline">Editar</button>
               </h3>
               <div className="space-y-2.5 text-sm">
-                {[
-                  ['Tipo',       order.printType.name],
-                  ['Longitud',   `${order.lengthCm} cm`],
-                  ['Repeticiones', String(order.repetitions)],
-                  ['Precio est.',  `$${order.estimatedPrice.toLocaleString('es-MX')} MXN`],
-                  ['Fecha',      new Date(order.createdAt).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' })],
-                ].map(([label, val]) => (
+                {(() => {
+                  const isPerUnit = (order.printType as any)?.pricingType === 'per_unit' || order.printType?.slug === 'sublimation_sheet';
+                  return [
+                    ['Tipo',       order.printType.name],
+                    ...(isPerUnit
+                      ? [['Cantidad',   `${order.lengthCm} hojas`]]
+                      : [['Longitud',   `${order.lengthCm} cm`], ['Repeticiones', String(order.repetitions)]]
+                    ),
+                    ['Precio est.',  `$${order.estimatedPrice.toLocaleString('es-MX')} MXN`],
+                    ['Fecha',      new Date(order.createdAt).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' })],
+                  ];
+                })().map(([label, val]) => (
                   <div key={label} className="flex justify-between gap-2">
                     <span className="text-slate-400 shrink-0">{label}</span>
                     <span className="font-semibold text-brand-ink truncate">{val}</span>
@@ -400,7 +420,7 @@ GRAFICA SLP`,
                       onClick={() => {
                         api.admin.markWhatsappSent(order._id).then(updated => setOrder(updated));
                       }}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-400 text-green-600 hover:bg-green-50 transition-colors"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-400 text-green-600 hover:bg-green-100 hover:border-green-500 transition-all duration-200 active:scale-[0.97]"
                     >
                       <WhatsappLogo size={16} weight="fill" /> Enviar por WhatsApp
                     </a>
@@ -436,19 +456,24 @@ GRAFICA SLP`,
               <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
                 <Printer className="w-5 h-5 text-brand-blue" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-1">Editar medidas y precio</h3>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">{(order?.printType as any)?.pricingType === 'per_unit' || order?.printType?.slug === 'sublimation_sheet' ? 'Editar cantidad y precio' : 'Editar medidas y precio'}</h3>
               <p className="text-sm text-slate-500 mb-4">Corrige los datos del pedido</p>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Longitud (cm)</label>
-                  <input type="number" value={editLength} onChange={e => setEditLength(e.target.value)} min="1"
+                  <label className="block text-xs font-medium text-slate-500 mb-1">
+                    {(order?.printType as any)?.pricingType === 'per_unit' || order?.printType?.slug === 'sublimation_sheet' ? 'Cantidad de hojas' : 'Longitud (cm)'}
+                  </label>
+                  <input type="number" value={editLength} onChange={e => { setEditLength(e.target.value); recalcPrice(e.target.value, editReps); }} min="1"
+                    step={1}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-colors" />
                 </div>
+                {(order?.printType as any)?.pricingType !== 'per_unit' && order?.printType?.slug !== 'sublimation_sheet' && (
                 <div>
                   <label className="block text-xs font-medium text-slate-500 mb-1">Repeticiones</label>
-                  <input type="number" value={editReps} onChange={e => setEditReps(e.target.value)} min="1"
+                  <input type="number" value={editReps} onChange={e => { setEditReps(e.target.value); recalcPrice(editLength, e.target.value); }} min="1"
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-colors" />
                 </div>
+                )}
                 <div>
                   <label className="block text-xs font-medium text-slate-500 mb-1">Precio estimado (MXN)</label>
                   <input type="number" value={editPrice} onChange={e => setEditPrice(e.target.value)} min="0" step="0.01"
@@ -456,7 +481,7 @@ GRAFICA SLP`,
                 </div>
               </div>
               <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowEditDetails(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                <button onClick={() => setShowEditDetails(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 text-sm">
                   Cancelar
                 </button>
                 <button onClick={handleSaveDetails} disabled={editSaving}
@@ -470,7 +495,7 @@ GRAFICA SLP`,
                   href={getDetailsUpdatedWaUrl(order)}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-400 text-green-600 hover:bg-green-50 transition-colors"
+                  className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border-2 border-green-400 text-green-600 hover:bg-green-100 hover:border-green-500 transition-all duration-200 active:scale-[0.97]"
                 >
                   <WhatsappLogo size={16} weight="fill" /> Notificar cambio al cliente
                 </a>

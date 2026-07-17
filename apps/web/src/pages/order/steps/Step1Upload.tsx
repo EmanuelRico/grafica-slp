@@ -65,7 +65,7 @@ function FileWarningModal({ onConfirm, onCancel }: { onConfirm: () => void; onCa
         <div className="mt-6 flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm"
+            className="flex-1 py-3 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 text-sm"
           >
             Revisar mi archivo
           </button>

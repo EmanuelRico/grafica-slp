@@ -253,7 +253,7 @@ export default function Providers() {
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.97]"
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:border-slate-300 transition-all active:scale-[0.97]"
                   >
                     Cancelar
                   </button>

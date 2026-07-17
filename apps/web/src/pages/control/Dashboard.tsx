@@ -495,7 +495,7 @@ export default function ControlDashboard() {
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-colors mb-4"
               />
               <div className="flex gap-3">
-                <button onClick={() => setPayingId(null)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                <button onClick={() => setPayingId(null)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 text-sm">
                   Cancelar
                 </button>
                 <button onClick={handleQuickPay} disabled={payingLoading}

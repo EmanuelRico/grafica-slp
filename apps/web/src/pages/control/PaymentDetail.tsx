@@ -350,7 +350,7 @@ export default function PaymentDetail() {
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-colors mb-4"
               />
               <div className="flex gap-3">
-                <button onClick={() => setShowPaidModal(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                <button onClick={() => setShowPaidModal(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 text-sm">
                   Cancelar
                 </button>
                 <button onClick={handleMarkPaid} disabled={submitting}
@@ -384,7 +384,7 @@ export default function PaymentDetail() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowCancelConfirm(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.97]"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:border-slate-300 transition-all active:scale-[0.97]"
                 >
                   No, volver
                 </button>
@@ -457,7 +457,7 @@ export default function PaymentDetail() {
                 </div>
               </div>
               <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowEditModal(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                <button onClick={() => setShowEditModal(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 text-sm">
                   Cancelar
                 </button>
                 <button onClick={handleEdit} disabled={editSaving}
@@ -495,7 +495,7 @@ export default function PaymentDetail() {
               <h3 className="text-lg font-bold text-slate-900 mb-1">Eliminar pago</h3>
               <p className="text-sm text-slate-500 mb-4">¿Estás seguro? Esta acción no se puede deshacer.</p>
               <div className="flex gap-3">
-                <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2.5 border-2 border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 text-sm">
                   Cancelar
                 </button>
                 <button onClick={handleDelete}

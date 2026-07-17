@@ -38,6 +38,7 @@ class PrintTypeSnapshot {
   @Prop({ required: true }) widthCm: number;
   @Prop({ required: true }) minLengthCm: number;
   @Prop({ required: true }) pricePerMeter: number;
+  @Prop({ default: 'per_meter' }) pricingType: string;
 }
 
 @Schema({ timestamps: true })
