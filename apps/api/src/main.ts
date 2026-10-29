@@ -64,7 +64,24 @@ async function bootstrap() {
       return new BadRequestException(formatValidationErrors(errors));
     },
   }));
-  app.enableCors({ origin: process.env.FRONTEND_URL || '*' });
+  // CORS — allow a list of known origins (apex, www, local dev) plus optional env-configured ones.
+  const allowedOrigins = [
+    'https://graficaslp.com',
+    'https://www.graficaslp.com',
+    'http://localhost:5173',
+    ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(o => o.trim().replace(/\/$/, '')) : []),
+  ];
+  app.enableCors({
+    origin: (origin, callback) => {
+      // Allow non-browser clients (no origin) and any origin in the allowlist
+      if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`), false);
+      }
+    },
+    credentials: true,
+  });
   await app.listen(process.env.PORT || 3001);
   console.log(`API running on port ${process.env.PORT || 3001}`);
 
