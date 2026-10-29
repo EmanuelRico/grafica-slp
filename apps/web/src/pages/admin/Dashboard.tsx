@@ -95,17 +95,9 @@ export default function AdminDashboard() {
 
   const fetchCounts = useCallback(async () => {
     try {
-      const all = await api.admin.listOrders({ limit: '1000' });
-      const counts: Record<string, number> = {};
-      const ptCounts: Record<string, number> = {};
-      all.data.forEach(o => {
-        counts[o.status] = (counts[o.status] || 0) + 1;
-        if (o.printType?.slug) ptCounts[o.printType.slug] = (ptCounts[o.printType.slug] || 0) + 1;
-      });
-      // Count activos (received + in_production + finished)
-      counts['active'] = (counts['received'] || 0) + (counts['in_production'] || 0) + (counts['finished'] || 0);
-      setStatusCounts(counts);
-      setPrintTypeCounts(ptCounts);
+      const { status, printType } = await api.admin.getCounts();
+      setStatusCounts(status);
+      setPrintTypeCounts(printType);
     } catch {}
   }, []);
 

@@ -36,6 +36,11 @@ export class AdminController {
     });
   }
 
+  @Get('orders/counts')
+  async getCounts() {
+    return this.adminService.getCounts();
+  }
+
   @Get('orders/:id')
   async getOrder(@Param('id') id: string) {
     return this.adminService.getOrder(id);

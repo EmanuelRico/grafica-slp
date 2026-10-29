@@ -163,6 +163,7 @@ Key rules from skills:
 - **Download proxy:** Files download via `GET /api/v1/files/download/:key` (avoids CORS)
 - **Global loading bar:** Top progress bar on all API calls + file uploads/downloads
 - **Dashboard defaults:** Shows all orders (10/page), auto-refreshes every 2min + on tab focus
+- **Dashboard counts:** Status/print-type card counts come from `GET /api/v1/admin/orders/counts` (MongoDB aggregation, lightweight). Do NOT fetch all orders client-side for counts — that caused dashboard slowness/timeouts on larger datasets.
 - **Dashboard cards:** Status cards (received, in_production, finished, pending_payment, delivered, active) + Print type cards (dtf_uv, dtf_textile, sublimation) — clicking filters the list
 - **Active filter:** received + in_production + finished (excludes pending_payment)
 

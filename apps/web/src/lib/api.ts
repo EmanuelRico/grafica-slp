@@ -99,6 +99,8 @@ export const api = {
       return req<{ data: Order[]; total: number; page: number; limit: number }>(`/admin/orders${qs}`);
     },
     getOrder: (id: string) => req<Order>(`/admin/orders/${id}`),
+    getCounts: () =>
+      req<{ status: Record<string, number>; printType: Record<string, number> }>('/admin/orders/counts'),
     updateStatus: (id: string, status: string, note?: string) =>
       req<Order>(`/admin/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, note }) }),
     getWhatsappMessage: (id: string) =>

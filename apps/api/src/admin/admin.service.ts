@@ -41,6 +41,23 @@ export class AdminService {
     return { data, total, page, limit };
   }
 
+  async getCounts(): Promise<{ status: Record<string, number>; printType: Record<string, number> }> {
+    const [statusAgg, printTypeAgg] = await Promise.all([
+      this.orderModel.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+      this.orderModel.aggregate([{ $group: { _id: '$printType.slug', count: { $sum: 1 } } }]),
+    ]);
+
+    const status: Record<string, number> = {};
+    statusAgg.forEach((r: any) => { if (r._id) status[r._id] = r.count; });
+    // Derived "active" count (received + in_production + finished)
+    status['active'] = (status['received'] || 0) + (status['in_production'] || 0) + (status['finished'] || 0);
+
+    const printType: Record<string, number> = {};
+    printTypeAgg.forEach((r: any) => { if (r._id) printType[r._id] = r.count; });
+
+    return { status, printType };
+  }
+
   async getOrder(id: string): Promise<OrderDocument> {
     const order = await this.orderModel.findById(id);
     if (!order) throw new NotFoundException('Order not found');
